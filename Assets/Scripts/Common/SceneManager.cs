@@ -4,15 +4,34 @@ using UnityEngine;
 
 public class SceneManager : MonoBehaviour
 {
-    // Start is called before the first frame update
+    private static SceneManager Instance = null;
+
+    private SceneManager() {}
+
     void Start()
+    {
+        if(Instance == null)
+        {
+            GameObject.DontDestroyOnLoad(this);
+            Instance = this;
+        }
+        else
+        {
+            GameObject.Destroy(this);
+        }
+    }
+
+    void Update()
     {
         
     }
 
-    // Update is called once per frame
-    void Update()
+    public static SceneManager GetInstance()
     {
-        
+        if(Instance == null)
+        {
+            Debug.Log("[WARNING] Scene Manager is null.");
+        }
+        return Instance;
     }
 }
