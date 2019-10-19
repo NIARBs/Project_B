@@ -26,6 +26,7 @@ public class Player : MonoBehaviour
         WALK,
         JUMP,
         ROLL,
+        CROUCH,
         END
     }
 
@@ -38,43 +39,53 @@ public class Player : MonoBehaviour
     [SerializeField] private float TrembleDist = 0.5f;
     [SerializeField] public float TrembleLv2Speed = 0.01f;
 
+    private STATE _beforeState;
     private STATE _state;
+
     private Rigidbody2D _rigid;
     private Vector2 _dir;
+    private Vector2 _scale;
     private Vector2 _trembleDir = Vector2.right;
 
     private float _accRollTime = 0;
     private float _accTrembleDist = 0;
 
+    void setState(STATE state)
+    {
+        _beforeState = _state;
+        _state = state;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
         _rigid = GetComponent<Rigidbody2D>();
+
+        _scale = transform.localScale;
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
-        switch(PanicState)
+
+        switch (PanicState)
         {
             case PANIC_LV.Lv1:      Panic_Lv1_Update();     break;
             case PANIC_LV.Lv2:      Panic_Lv2_Update();     break;
             case PANIC_LV.Lv3:      Panic_Lv3_Update();     break;
             case PANIC_LV.Lv_END:                           break;
         }
-        
-
-        
     }
 
     void Panic_Lv1_Update()
     {
         switch (_state)
         {
-            case STATE.IDLE: Idle(); break;
-            case STATE.WALK: Walk(); break;
-            case STATE.JUMP: Jump(); break;
-            case STATE.ROLL: Roll(); break;
+            case STATE.IDLE:    Idle();     break;
+            case STATE.WALK:    Walk();     break;
+            case STATE.CROUCH:  Crouch();   break;
+            case STATE.JUMP:    Jump();     break;
+            case STATE.ROLL:    Roll();     break;
             case STATE.END: break;
         }
     }
@@ -123,18 +134,22 @@ public class Player : MonoBehaviour
     {
         if (true == getRightKey())
         {
-            _state = STATE.WALK;
+            setState(STATE.WALK);
             _dir = Vector2.right;
         }
         else if (true == getLeftKey())
         {
-            _state = STATE.WALK;
+            setState(STATE.WALK);
             _dir = Vector2.left;
         }
 
         if (true == getJumpKey())
         {
-            _state = STATE.JUMP;
+            setState(STATE.JUMP);
+        }
+        else if(true == getDownKey())
+        {
+            setState(STATE.CROUCH);
         }
 
     }
@@ -145,21 +160,43 @@ public class Player : MonoBehaviour
 
         if (false == getRightKey() && _dir == Vector2.right)
         {
-            _state = STATE.IDLE;
+            setState(STATE.IDLE);
         }
         else if(false == getLeftKey() && _dir == Vector2.left)
         {
-            _state = STATE.IDLE;
+            setState(STATE.IDLE);
         }
 
         if (true == getJumpKey())
         {
-            _state = STATE.JUMP;
+            setState(STATE.JUMP);
         }
         else if (true == getRollKey())
         {
-            _state = STATE.ROLL;
+            setState(STATE.ROLL);
             _accRollTime = 0;
+        }
+        else if (true == getDownKey())
+        {
+            setState(STATE.CROUCH);
+        }
+    }
+
+    void Crouch()
+    {
+        if(_beforeState != _state)
+        {
+            transform.localScale = new Vector2(_scale.x, _scale.y * 0.5f);
+            transform.position = new Vector2(transform.position.x, transform.position.y - _scale.y * 0.25f);
+            _beforeState = _state;
+        }
+        
+
+        if(false == getDownKey())
+        {
+            setState(STATE.IDLE);
+            transform.localScale = _scale;
+            transform.position = new Vector2(transform.position.x, transform.position.y + _scale.y * 0.25f);
         }
     }
 
@@ -182,13 +219,22 @@ public class Player : MonoBehaviour
 
     void Roll()
     {
+        if (_beforeState != _state)
+        {
+            transform.localScale = new Vector2(_scale.x, _scale.y * 0.5f);
+            transform.position = new Vector2(transform.position.x, transform.position.y - _scale.y * 0.25f);
+            _beforeState = _state;
+        }
+
         _accRollTime += Time.deltaTime;
         transform.Translate(_dir * (Speed + RollSpeed) * Time.deltaTime);
 
-        if(_accRollTime > RollTime)
+        if (_accRollTime > RollTime)
         {
             _accRollTime = 0;
-            _state = STATE.IDLE;
+            setState(STATE.IDLE);
+            transform.localScale = _scale;
+            transform.position = new Vector2(transform.position.x, transform.position.y + _scale.y * 0.25f);
         }
 
     }
@@ -230,7 +276,7 @@ public class Player : MonoBehaviour
     {
         if(collision.transform.tag == "Platform" && _state == STATE.JUMP)
         {
-            _state = STATE.IDLE;
+            setState(STATE.IDLE);
         }
     }
 
