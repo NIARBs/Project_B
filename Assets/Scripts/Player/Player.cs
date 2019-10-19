@@ -276,7 +276,12 @@ public class Player : MonoBehaviour
     {
         if(collision.transform.tag == "Platform" && _state == STATE.JUMP)
         {
-            setState(STATE.IDLE);
+            Vector2 colPos = collision.GetContact(0).point;
+            if(colPos.y < transform.localPosition.y)
+            {
+                setState(STATE.IDLE);
+                transform.localPosition = new Vector2(transform.localPosition.x, colPos.y + transform.localScale.y * 0.5f);
+            }
         }
     }
 
