@@ -8,7 +8,8 @@ public enum EBiometricSensorState
     DoorOpen,
     DoorClose,
     ItemDrop,
-    AlertActivation
+    AlertActivation,
+    MoveBlock
 }
 
 public class BiometricSensor : MonoBehaviour
@@ -26,7 +27,14 @@ public class BiometricSensor : MonoBehaviour
 
     void Start()
     {
-
+        if(target.tag == "MoveBlock")
+        {
+            target.GetComponent<MoveBlock>().SetPause(true);
+        }
+        else if(target.tag == "Item")
+        {
+            target.SetActive(false);
+        }
     }
 
     void ProcessActionTarget()
@@ -40,9 +48,14 @@ public class BiometricSensor : MonoBehaviour
                 break;
 
             case EBiometricSensorState.ItemDrop:
+                target.SetActive(true);
                 break;
 
             case EBiometricSensorState.AlertActivation:
+                break;
+
+            case EBiometricSensorState.MoveBlock:
+                target.GetComponent<MoveBlock>().SetPause(false);
                 break;
 
             default:

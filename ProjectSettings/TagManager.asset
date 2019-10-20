@@ -5,6 +5,10 @@ TagManager:
   serializedVersion: 2
   tags:
   - Platform
+  - BiometricSensor
+  - MoveBlock
+  - Item
+  - Door
   layers:
   - Default
   - TransparentFX
