@@ -42,9 +42,11 @@ public class BiometricSensor : MonoBehaviour
         switch (state)
         {
             case EBiometricSensorState.DoorOpen:
+                target.GetComponent<Door>().SetState(EDoorState.Opening);
                 break;
 
             case EBiometricSensorState.DoorClose:
+                target.GetComponent<Door>().SetState(EDoorState.Closing);
                 break;
 
             case EBiometricSensorState.ItemDrop:
