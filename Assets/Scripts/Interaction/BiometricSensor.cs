@@ -54,6 +54,7 @@ public class BiometricSensor : MonoBehaviour
                 break;
 
             case EBiometricSensorState.AlertActivation:
+                target.SetActive(true);
                 break;
 
             case EBiometricSensorState.MoveBlock:
