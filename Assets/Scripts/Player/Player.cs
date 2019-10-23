@@ -22,7 +22,7 @@ public class Player : MonoBehaviour
 
     enum STATE
     {
-        IDLE,
+        IDLE = 0,
         WALK,
         JUMP,
         ROLL,
@@ -49,6 +49,9 @@ public class Player : MonoBehaviour
 
     private float _accRollTime = 0;
     private float _accTrembleDist = 0;
+    private float _gravity = 2;
+
+    StateMachine _stateMachine;
 
     void setState(STATE state)
     {
@@ -56,18 +59,53 @@ public class Player : MonoBehaviour
         _state = state;
     }
 
+
+    private void Awake()
+    {
+        _stateMachine = new StateMachine();
+
+        _stateMachine.SetCallback((int)STATE.IDLE, StIdle, null, null, null);
+    }
+
+    private int StIdle()
+    {
+        if (true == getRightKey())
+        {
+            _dir = Vector2.right;
+            return (int)STATE.WALK;
+        }
+        else if (true == getLeftKey())
+        {
+            _dir = Vector2.left;
+            return (int)STATE.WALK;
+        }
+
+        if (true == getJumpKey())
+        {
+            _rigid.AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
+            return (int)STATE.JUMP;
+        }
+        else if (true == getDownKey())
+        {
+            return (int)STATE.CROUCH;
+        }
+
+        return (int)STATE.IDLE;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
         _rigid = GetComponent<Rigidbody2D>();
-
         _scale = transform.localScale;
     }
 
-    // Update is called once per frame
-    void FixedUpdate()
-    {
 
+
+    // Update is called once per frame
+    void Update()
+    {
+        _stateMachine.Update();
         switch (PanicState)
         {
             case PANIC_LV.Lv1:      Panic_Lv1_Update();     break;
@@ -75,12 +113,15 @@ public class Player : MonoBehaviour
             case PANIC_LV.Lv3:      Panic_Lv3_Update();     break;
             case PANIC_LV.Lv_END:                           break;
         }
+
     }
 
     void Panic_Lv1_Update()
     {
         switch (_state)
         {
+
+
             case STATE.IDLE:    Idle();     break;
             case STATE.WALK:    Walk();     break;
             case STATE.CROUCH:  Crouch();   break;
@@ -97,7 +138,9 @@ public class Player : MonoBehaviour
         {
             case STATE.IDLE: Idle(); break;
             case STATE.WALK: Walk(); break;
+            case STATE.CROUCH: Crouch(); break;
             case STATE.JUMP: Jump(); break;
+            case STATE.ROLL: Roll(); break;
             case STATE.END: break;
         }
     }
@@ -146,6 +189,7 @@ public class Player : MonoBehaviour
         if (true == getJumpKey())
         {
             setState(STATE.JUMP);
+            _rigid.AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
         }
         else if(true == getDownKey())
         {
@@ -169,6 +213,7 @@ public class Player : MonoBehaviour
 
         if (true == getJumpKey())
         {
+            _rigid.AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
             setState(STATE.JUMP);
         }
         else if (true == getRollKey())
@@ -202,8 +247,6 @@ public class Player : MonoBehaviour
 
     void Jump()
     {
-        transform.Translate(Vector2.up * JumpSpeed * Time.deltaTime);
-
         if (true == getRightKey())
         {
             _dir = Vector2.right;

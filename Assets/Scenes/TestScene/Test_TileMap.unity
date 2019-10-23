@@ -1911,8 +1911,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1155696588}
-  - component: {fileID: 1155696587}
   - component: {fileID: 1155696589}
+  - component: {fileID: 1155696587}
   - component: {fileID: 1155696590}
   - component: {fileID: 1155696591}
   m_Layer: 0
@@ -1987,7 +1987,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -7.33, y: -0.41999996}
+  m_AnchoredPosition: {x: -7.33, y: -0.41999984}
   m_SizeDelta: {x: 1.0044248, y: 1.0044248}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1155696589
@@ -2008,8 +2008,8 @@ MonoBehaviour:
   JumpSpeed: 5
   PanicState: 0
   Panic_Lv3: 0
-  TrembleDist: 0.5
-  TrembleLv2Speed: 0.2
+  TrembleDist: 0.03
+  TrembleLv2Speed: 0.1
 --- !u!50 &1155696590
 Rigidbody2D:
   serializedVersion: 4
@@ -2025,7 +2025,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDrag: 0
   m_AngularDrag: 0.05
-  m_GravityScale: 1
+  m_GravityScale: 2
   m_Material: {fileID: 6200000, guid: 97dba48c69b5d3c4a8c4f0b60af3d6b5, type: 2}
   m_Interpolate: 0
   m_SleepingMode: 1
