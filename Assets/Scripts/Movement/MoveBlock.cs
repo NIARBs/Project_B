@@ -22,6 +22,7 @@ public class MoveBlock : MonoBehaviour
     private Vector2 originSrcCoord;
     private Vector2 originDstCoord;
     private bool isDst = false;
+    private bool isPause = false;
 
     void Start()
     {
@@ -33,6 +34,11 @@ public class MoveBlock : MonoBehaviour
 
     void FixedUpdate()
     {
+        if(isPause)
+        {
+            return;
+        }
+
         if(state == EMoveBlockState.LeftAndRight)
         {
             MoveLeftAndRight();
@@ -91,6 +97,11 @@ public class MoveBlock : MonoBehaviour
         {
             isDst = false;
         }
+    }
+
+    public void SetPause(bool pause)
+    {
+        isPause = pause;
     }
 }
 
