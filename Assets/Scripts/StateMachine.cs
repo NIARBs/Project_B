@@ -24,10 +24,10 @@ class StateValue
 }
 
 
-public class StateMachine : MonoBehaviour
+public class StateMachine
 {
-    Dictionary<int, StateValue> dicState;
-    int curState;
+    Dictionary<int, StateValue> dicState = new Dictionary<int, StateValue> { };
+    public int curState { get; set; }
 
     public void Update()
     {
@@ -44,9 +44,11 @@ public class StateMachine : MonoBehaviour
         }
     }
 
-    public void SetCallback(int type_, stUpdate update_, stCoroutine coroutine_, stBegin begin_, stEnd end_)
+    public void SetCallback(int type_, stUpdate update_, stBegin begin_, stEnd end_)
     {
-        dicState[type_] = new StateValue(update_, coroutine_, begin_, end_);
+        dicState.Add(type_, new StateValue(update_, null, begin_, end_));
     }
+
+
 }
 

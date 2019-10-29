@@ -18,8 +18,8 @@ public class BiometricSensor : MonoBehaviour
 
     [SerializeField] EBiometricSensorState state = EBiometricSensorState.None;
 
-    [SerializeField] GameObject target;
-    [SerializeField] GameObject sensingObject;
+    [SerializeField] GameObject target = null;
+    [SerializeField] GameObject sensingObject = null;
 
     [SerializeField] float recognitionTime = 2.0f;
 
