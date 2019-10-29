@@ -24,6 +24,7 @@ public class BiometricSensor : MonoBehaviour
     [SerializeField] float recognitionTime = 2.0f;
 
     private bool isActive = false;
+    private bool isReverse = false;
 
     void Start()
     {
@@ -35,6 +36,11 @@ public class BiometricSensor : MonoBehaviour
         {
             target.SetActive(false);
         }
+
+        if(!isOnce)
+        {
+            recognitionTime = 0.0f;
+        }
     }
 
     void ProcessActionTarget()
@@ -42,23 +48,23 @@ public class BiometricSensor : MonoBehaviour
         switch (state)
         {
             case EBiometricSensorState.DoorOpen:
-                target.GetComponent<Door>().SetState(EDoorState.Opening);
+                target.GetComponent<Door>().SetState(!isReverse ? EDoorState.Opening : EDoorState.Closing);
                 break;
 
             case EBiometricSensorState.DoorClose:
-                target.GetComponent<Door>().SetState(EDoorState.Closing);
+                target.GetComponent<Door>().SetState(!isReverse ? EDoorState.Closing : EDoorState.Opening);
                 break;
 
             case EBiometricSensorState.ItemDrop:
-                target.SetActive(true);
+                target.SetActive(!isReverse);
                 break;
 
             case EBiometricSensorState.AlertActivation:
-                target.SetActive(true);
+                target.SetActive(!isReverse);
                 break;
 
             case EBiometricSensorState.MoveBlock:
-                target.GetComponent<MoveBlock>().SetPause(false);
+                target.GetComponent<MoveBlock>().SetPause(isReverse);
                 break;
 
             default:
@@ -70,6 +76,12 @@ public class BiometricSensor : MonoBehaviour
     {
         Debug.Log("진입완료");
         
+        // 생체인식 범위에 올라가 있어야만 상호작용함
+        if(!isOnce)
+        {
+            isReverse = false;
+        }
+
         // 생체인식 활성화되지 않았을 경우 인식 시작
         if(!isActive)
         {
@@ -90,6 +102,8 @@ public class BiometricSensor : MonoBehaviour
         if(!isOnce)
         {
             isActive = false;
+            isReverse = true;
+            
             ProcessActionTarget();
         }
     }
