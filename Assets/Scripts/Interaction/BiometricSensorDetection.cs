@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class BiometricSensorDetection : MonoBehaviour
 {
-    [SerializeField] GameObject biometricSensor;
+    [SerializeField] GameObject biometricSensor = null;
 
     void OnTriggerEnter2D(Collider2D collision)
     {

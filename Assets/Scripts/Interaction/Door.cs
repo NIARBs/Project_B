@@ -16,9 +16,9 @@ public class Door : MonoBehaviour
 
     [SerializeField] EDoorState state = EDoorState.Idle;
 
-    [SerializeField] GameObject leftDoor;
-    [SerializeField] GameObject rightDoor;
-    [SerializeField] GameObject gate;
+    [SerializeField] GameObject leftDoor = null;
+    [SerializeField] GameObject rightDoor = null;
+    [SerializeField] GameObject gate = null;
     
     private float closeLeftXCoord;
     private float closeRightXCoord;

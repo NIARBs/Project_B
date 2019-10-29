@@ -22,7 +22,7 @@ public class Player : MonoBehaviour
 
     enum STATE
     {
-        IDLE,
+        IDLE = 0,
         WALK,
         JUMP,
         ROLL,
@@ -31,16 +31,13 @@ public class Player : MonoBehaviour
     }
 
     [SerializeField] public float Speed = 1;
+    [SerializeField] public float MaxSpeed = 10;
     [SerializeField] public float RollSpeed = 0.5f;
     [SerializeField] public float RollTime = 0.5f;
     [SerializeField] public float JumpSpeed = 5;
     [SerializeField] private PANIC_LV PanicState = PANIC_LV.Lv2;
-    [SerializeField] private PANIC_LV3_STATE Panic_Lv3 = PANIC_LV3_STATE.STOP;
     [SerializeField] private float TrembleDist = 0.5f;
     [SerializeField] public float TrembleLv2Speed = 0.01f;
-
-    private STATE _beforeState;
-    private STATE _state;
 
     private Rigidbody2D _rigid;
     private Vector2 _dir;
@@ -50,70 +47,36 @@ public class Player : MonoBehaviour
     private float _accRollTime = 0;
     private float _accTrembleDist = 0;
 
-    void setState(STATE state)
+    StateMachine _stateMachine;
+
+    private void Awake()
     {
-        _beforeState = _state;
-        _state = state;
+        _stateMachine = new StateMachine { };
+
+        _stateMachine.SetCallback((int)STATE.IDLE, StIdle, null, null);
+        _stateMachine.SetCallback((int)STATE.WALK, StWalk, null, null);
+        _stateMachine.SetCallback((int)STATE.JUMP, StJump, null, null);
+        _stateMachine.SetCallback((int)STATE.ROLL, StRoll, StRollBegin, StRollEnd);
+        _stateMachine.SetCallback((int)STATE.CROUCH, StCrouch, StCrouchBegin, StCrouchEnd);
     }
+
+    
 
     // Start is called before the first frame update
     void Start()
     {
         _rigid = GetComponent<Rigidbody2D>();
-
         _scale = transform.localScale;
     }
 
     // Update is called once per frame
-    void FixedUpdate()
+    void Update()
     {
+        _stateMachine.Update();
 
-        switch (PanicState)
-        {
-            case PANIC_LV.Lv1:      Panic_Lv1_Update();     break;
-            case PANIC_LV.Lv2:      Panic_Lv2_Update();     break;
-            case PANIC_LV.Lv3:      Panic_Lv3_Update();     break;
-            case PANIC_LV.Lv_END:                           break;
-        }
+        if (_rigid.velocity.x >= MaxSpeed)
+            _rigid.velocity = new Vector2(MaxSpeed, _rigid.velocity.y);
     }
-
-    void Panic_Lv1_Update()
-    {
-        switch (_state)
-        {
-            case STATE.IDLE:    Idle();     break;
-            case STATE.WALK:    Walk();     break;
-            case STATE.CROUCH:  Crouch();   break;
-            case STATE.JUMP:    Jump();     break;
-            case STATE.ROLL:    Roll();     break;
-            case STATE.END: break;
-        }
-    }
-
-    void Panic_Lv2_Update()
-    {
-        trembleLv2();
-        switch (_state)
-        {
-            case STATE.IDLE: Idle(); break;
-            case STATE.WALK: Walk(); break;
-            case STATE.JUMP: Jump(); break;
-            case STATE.END: break;
-        }
-    }
-
-    void Panic_Lv3_Update()
-    {
-        switch (Panic_Lv3)
-        {
-            case PANIC_LV3_STATE.STOP: break;
-            case PANIC_LV3_STATE.RUN_LEFT:  transform.Translate(Vector2.left * Speed * Time.deltaTime);     break;
-            case PANIC_LV3_STATE.RUN_RIGHT: transform.Translate(Vector2.right * Speed * Time.deltaTime);    break;
-            case PANIC_LV3_STATE.END: break;
-        }
-
-    }
-
 
     void trembleLv2()
     {
@@ -128,115 +91,128 @@ public class Player : MonoBehaviour
         }
     }
 
-    
-
-    void Idle()
+    private int StIdle()
     {
         if (true == getRightKey())
         {
-            setState(STATE.WALK);
             _dir = Vector2.right;
+            return (int)STATE.WALK;
         }
         else if (true == getLeftKey())
         {
-            setState(STATE.WALK);
             _dir = Vector2.left;
+            return (int)STATE.WALK;
         }
 
         if (true == getJumpKey())
         {
-            setState(STATE.JUMP);
-        }
-        else if(true == getDownKey())
-        {
-            setState(STATE.CROUCH);
-        }
-
-    }
-
-    void Walk()
-    {
-        transform.Translate(_dir * Speed * Time.deltaTime);
-
-        if (false == getRightKey() && _dir == Vector2.right)
-        {
-            setState(STATE.IDLE);
-        }
-        else if(false == getLeftKey() && _dir == Vector2.left)
-        {
-            setState(STATE.IDLE);
-        }
-
-        if (true == getJumpKey())
-        {
-            setState(STATE.JUMP);
-        }
-        else if (true == getRollKey())
-        {
-            setState(STATE.ROLL);
-            _accRollTime = 0;
+            _rigid.AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
+            return (int)STATE.JUMP;
         }
         else if (true == getDownKey())
         {
-            setState(STATE.CROUCH);
+            return (int)STATE.CROUCH;
         }
+
+        return (int)STATE.IDLE;
     }
 
-    void Crouch()
+    int StWalk()
     {
-        if(_beforeState != _state)
-        {
-            transform.localScale = new Vector2(_scale.x, _scale.y * 0.5f);
-            transform.position = new Vector2(transform.position.x, transform.position.y - _scale.y * 0.25f);
-            _beforeState = _state;
-        }
-        
+        _rigid.AddForce(_dir * Speed, ForceMode2D.Force);
 
+        if (false == getRightKey() && _dir == Vector2.right)
+        {
+            return (int)STATE.IDLE;
+        }
+        else if(false == getLeftKey() && _dir == Vector2.left)
+        {
+            return (int)STATE.IDLE;
+        }
+
+        if (true == getJumpKey())
+        {
+            _rigid.AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
+            return (int)STATE.JUMP;
+        }
+        else if (true == getRollKey())
+        {
+            _accRollTime = 0;
+            return (int)STATE.ROLL;
+        }
+        else if (true == getDownKey())
+        {
+            return (int)STATE.CROUCH;
+        }
+
+        return (int)STATE.WALK;
+    }
+
+    void StCrouchBegin()
+    {
+        transform.localScale = new Vector2(_scale.x, _scale.y * 0.5f);
+        transform.position = new Vector2(transform.position.x, transform.position.y - _scale.y * 0.25f);
+    }
+
+    int StCrouch()
+    {
         if(false == getDownKey())
         {
-            setState(STATE.IDLE);
-            transform.localScale = _scale;
-            transform.position = new Vector2(transform.position.x, transform.position.y + _scale.y * 0.25f);
+            
+            return (int)STATE.IDLE;
         }
+
+        return (int)STATE.CROUCH;
     }
 
-    void Jump()
+    void StCrouchEnd()
     {
-        transform.Translate(Vector2.up * JumpSpeed * Time.deltaTime);
+        transform.localScale = _scale;
+        transform.position = new Vector2(transform.position.x, transform.position.y + _scale.y * 0.25f);
+    }
 
+    int StJump()
+    {
         if (true == getRightKey())
         {
             _dir = Vector2.right;
-            transform.Translate(_dir * Speed * Time.deltaTime);
+            _rigid.AddForce(_dir * Speed, ForceMode2D.Force);
+            
         }
         else if (true == getLeftKey())
         {
             _dir = Vector2.left;
-            transform.Translate(_dir * Speed * Time.deltaTime);
+            _rigid.AddForce(_dir * Speed, ForceMode2D.Force);
+
         }
 
+        return (int)STATE.JUMP;
     }
 
-    void Roll()
+    void StRollBegin()
     {
-        if (_beforeState != _state)
-        {
-            transform.localScale = new Vector2(_scale.x, _scale.y * 0.5f);
-            transform.position = new Vector2(transform.position.x, transform.position.y - _scale.y * 0.25f);
-            _beforeState = _state;
-        }
+        transform.localScale = new Vector2(_scale.x, _scale.y * 0.5f);
+        transform.position = new Vector2(transform.position.x, transform.position.y - _scale.y * 0.25f);
+    }
 
+    int StRoll()
+    {
         _accRollTime += Time.deltaTime;
         transform.Translate(_dir * (Speed + RollSpeed) * Time.deltaTime);
 
         if (_accRollTime > RollTime)
         {
-            _accRollTime = 0;
-            setState(STATE.IDLE);
-            transform.localScale = _scale;
-            transform.position = new Vector2(transform.position.x, transform.position.y + _scale.y * 0.25f);
+            return (int)STATE.IDLE;
         }
 
+        return (int)STATE.ROLL;
+    }
+
+    void StRollEnd()
+    {
+        _accRollTime = 0;
+        transform.localScale = _scale;
+        transform.position = new Vector2(transform.position.x, transform.position.y + _scale.y * 0.25f);
     }
 
     private bool getRightKey()
@@ -274,12 +250,12 @@ public class Player : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if(collision.transform.tag == "Platform" && _state == STATE.JUMP)
+        if(collision.transform.tag == "Platform" && _stateMachine.curState == (int)STATE.JUMP)
         {
             Vector2 colPos = collision.GetContact(0).point;
             if(colPos.y < transform.localPosition.y)
             {
-                setState(STATE.IDLE);
+                _stateMachine.curState = (int)STATE.IDLE;
                 transform.localPosition = new Vector2(transform.localPosition.x, colPos.y + transform.localScale.y * 0.5f);
             }
         }
