@@ -27,7 +27,7 @@ class StateValue
 public class StateMachine
 {
     Dictionary<int, StateValue> dicState = new Dictionary<int, StateValue> { };
-    public int curState { get; set; }
+    public int curState { get; private set; }
 
     public void Update()
     {
@@ -40,6 +40,8 @@ public class StateMachine
             
             dicState[curState].begin?.Invoke();
 
+            Debug.Log(curState);
+
             //StartCoroutine(dicState[curState].coroutine?.Invoke());
         }
     }
@@ -49,6 +51,14 @@ public class StateMachine
         dicState.Add(type_, new StateValue(update_, null, begin_, end_));
     }
 
+    public void changeState(int type_)
+    {
+        dicState[curState].end?.Invoke();
+
+        curState = type_;
+
+        dicState[curState].begin?.Invoke();
+    }
 
 }
 

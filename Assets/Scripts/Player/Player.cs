@@ -20,15 +20,13 @@ public class Player : MonoBehaviour
         Lv_END,
     }
 
-    enum STATE
-    {
-        IDLE = 0,
-        WALK,
-        JUMP,
-        ROLL,
-        CROUCH,
-        END
-    }
+    private const int IDLE = 0;
+    private const int WALK = 1;
+    private const int JUMP = 2;
+    private const int ROLL = 3;
+    private const int CROUCH = 4;
+    private const int CLIMB = 5;
+    private const int WallJump = 6;
 
     [SerializeField] public float Speed = 1;
     [SerializeField] public float MaxSpeed = 10;
@@ -46,18 +44,24 @@ public class Player : MonoBehaviour
 
     private float _accRollTime = 0;
     private float _accTrembleDist = 0;
+    private float _gravity = 0;
+
+    private bool _canWallJump = true;
 
     StateMachine _stateMachine;
+
+    
 
     private void Awake()
     {
         _stateMachine = new StateMachine { };
 
-        _stateMachine.SetCallback((int)STATE.IDLE, StIdle, null, null);
-        _stateMachine.SetCallback((int)STATE.WALK, StWalk, null, null);
-        _stateMachine.SetCallback((int)STATE.JUMP, StJump, null, null);
-        _stateMachine.SetCallback((int)STATE.ROLL, StRoll, StRollBegin, StRollEnd);
-        _stateMachine.SetCallback((int)STATE.CROUCH, StCrouch, StCrouchBegin, StCrouchEnd);
+        _stateMachine.SetCallback(IDLE, StIdle, StIdleBegin, null);
+        _stateMachine.SetCallback(WALK, StWalk, null, null);
+        _stateMachine.SetCallback(JUMP, StJump, StJumpBegin, null);
+        _stateMachine.SetCallback(ROLL, StRoll, StRollBegin, StRollEnd);
+        _stateMachine.SetCallback(CROUCH, StCrouch, StCrouchBegin, StCrouchEnd);
+        _stateMachine.SetCallback(CLIMB, StClimbUpdate, StClimbBegin, StclimbEnd);
     }
 
     
@@ -67,15 +71,40 @@ public class Player : MonoBehaviour
     {
         _rigid = GetComponent<Rigidbody2D>();
         _scale = transform.localScale;
+        _gravity = _rigid.gravityScale;
     }
 
     // Update is called once per frame
     void Update()
     {
         _stateMachine.Update();
+    }
 
-        if (_rigid.velocity.x >= MaxSpeed)
+      private void FixedUpdate()
+    {
+        if (_rigid.velocity.x > MaxSpeed)
             _rigid.velocity = new Vector2(MaxSpeed, _rigid.velocity.y);
+        else if (_rigid.velocity.x < -MaxSpeed)
+            _rigid.velocity = new Vector2(-MaxSpeed, _rigid.velocity.y);
+
+
+        Debug.DrawRay(_rigid.position, Vector3.down, Color.red);
+        Debug.DrawRay(_rigid.position, Vector3.right * 0.5f, Color.red);
+        Debug.DrawRay(_rigid.position, Vector3.left * 0.5f, Color.red);
+        
+
+        if (_rigid.velocity.y <= 0)
+        {
+            RaycastHit2D rayHit = Physics2D.Raycast(_rigid.position, Vector3.down , 1, LayerMask.GetMask("Platform"));
+            if (rayHit.collider != null && _stateMachine.curState == JUMP)
+            {
+                if (rayHit.distance <= 0.6)
+                {
+                    _stateMachine.changeState(IDLE);
+                }
+            }
+        }
+
     }
 
     void trembleLv2()
@@ -90,68 +119,72 @@ public class Player : MonoBehaviour
             _accTrembleDist = 0;
         }
     }
-
+    private void StIdleBegin()
+    {
+        _canWallJump = true;
+    }
     private int StIdle()
     {
         if (true == getRightKey())
         {
             _dir = Vector2.right;
-            return (int)STATE.WALK;
+            return WALK;
         }
         else if (true == getLeftKey())
         {
             _dir = Vector2.left;
-            return (int)STATE.WALK;
+            return WALK;
         }
 
-        if (true == getJumpKey())
+        if (true == getJumpKeyDown())
         {
-            _rigid.AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
-            return (int)STATE.JUMP;
+            return JUMP;
         }
         else if (true == getDownKey())
         {
-            return (int)STATE.CROUCH;
+            return CROUCH;
         }
 
-        return (int)STATE.IDLE;
+        _rigid.velocity = new Vector2(_rigid.velocity.normalized.x * 0.5f, _rigid.velocity.y);
+        if (_rigid.velocity.normalized.x <= 1)
+            _rigid.velocity = new Vector2(0, _rigid.velocity.y);
+
+        return IDLE;
     }
 
     int StWalk()
     {
-        _rigid.AddForce(_dir * Speed, ForceMode2D.Force);
+        _rigid.AddForce(_dir * Speed, ForceMode2D.Impulse);
 
         if (false == getRightKey() && _dir == Vector2.right)
         {
-            return (int)STATE.IDLE;
+            return IDLE;
         }
         else if(false == getLeftKey() && _dir == Vector2.left)
         {
-            return (int)STATE.IDLE;
+            return IDLE;
         }
 
-        if (true == getJumpKey())
+        if (true == getJumpKeyDown())
         {
-            _rigid.AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
-            return (int)STATE.JUMP;
+            return JUMP;
         }
         else if (true == getRollKey())
         {
-            _accRollTime = 0;
-            return (int)STATE.ROLL;
+            return ROLL;
         }
         else if (true == getDownKey())
         {
-            return (int)STATE.CROUCH;
+            return CROUCH;
         }
 
-        return (int)STATE.WALK;
+        return WALK;
     }
 
     void StCrouchBegin()
     {
         transform.localScale = new Vector2(_scale.x, _scale.y * 0.5f);
-        transform.position = new Vector2(transform.position.x, transform.position.y - _scale.y * 0.25f);
+        //transform.position = new Vector2(transform.position.x, transform.position.y - _scale.y * 0.1f);
     }
 
     int StCrouch()
@@ -159,10 +192,10 @@ public class Player : MonoBehaviour
         if(false == getDownKey())
         {
             
-            return (int)STATE.IDLE;
+            return IDLE;
         }
 
-        return (int)STATE.CROUCH;
+        return CROUCH;
     }
 
     void StCrouchEnd()
@@ -171,26 +204,58 @@ public class Player : MonoBehaviour
         transform.position = new Vector2(transform.position.x, transform.position.y + _scale.y * 0.25f);
     }
 
+    void StJumpBegin()
+    {
+        _rigid.AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
+    }
+
     int StJump()
     {
         if (true == getRightKey())
         {
             _dir = Vector2.right;
-            _rigid.AddForce(_dir * Speed, ForceMode2D.Force);
+            _rigid.AddForce(_dir * Speed, ForceMode2D.Impulse);
             
         }
         else if (true == getLeftKey())
         {
             _dir = Vector2.left;
-            _rigid.AddForce(_dir * Speed, ForceMode2D.Force);
+            _rigid.AddForce(_dir * Speed, ForceMode2D.Impulse);
 
         }
 
-        return (int)STATE.JUMP;
+        do // 벽점프 체크
+        {
+            if (_canWallJump == false)
+                break;
+
+            RaycastHit2D rayHit = Physics2D.Raycast(_rigid.position, Vector3.left, 1, LayerMask.GetMask("Platform"));
+            if (rayHit.collider != null)
+            {
+                if (rayHit.distance <= 0.5)
+                {
+                    return CLIMB;
+                }
+            }
+
+            rayHit = Physics2D.Raycast(_rigid.position, Vector3.right, 1, LayerMask.GetMask("Platform"));
+            if (rayHit.collider != null)
+            {
+                if (rayHit.distance <= 0.5)
+                {
+                    return CLIMB;
+                }
+            }
+
+        } while (false);
+
+        return JUMP;
     }
 
     void StRollBegin()
     {
+        _accRollTime = 0;
+
         transform.localScale = new Vector2(_scale.x, _scale.y * 0.5f);
         transform.position = new Vector2(transform.position.x, transform.position.y - _scale.y * 0.25f);
     }
@@ -202,10 +267,34 @@ public class Player : MonoBehaviour
 
         if (_accRollTime > RollTime)
         {
-            return (int)STATE.IDLE;
+            return IDLE;
         }
 
-        return (int)STATE.ROLL;
+        return ROLL;
+    }
+
+    void StClimbBegin()
+    {
+        _gravity = _rigid.gravityScale;
+        _canWallJump = false;
+
+        _rigid.velocity = Vector2.zero;
+        _rigid.gravityScale = 0;
+    }
+
+    int StClimbUpdate()
+    {
+        if(getJumpKeyDown() == true)
+        {
+            return JUMP;
+        }
+
+        return CLIMB;
+    }
+
+    void StclimbEnd()
+    {
+        _rigid.gravityScale = _gravity;
     }
 
     void StRollEnd()
@@ -217,13 +306,13 @@ public class Player : MonoBehaviour
 
     private bool getRightKey()
     {
-        bool isKeyDown = Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D);
+        bool isKeyDown = Input.GetKey(KeyCode.RightArrow);
         return isKeyDown;
     }
 
     private bool getLeftKey()
     {
-        bool isKeyDown = Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A);
+        bool isKeyDown = Input.GetKey(KeyCode.LeftArrow);
         return isKeyDown;
     }
 
@@ -232,13 +321,19 @@ public class Player : MonoBehaviour
         if (PanicState == PANIC_LV.Lv3)
             return false;
 
-        bool isKeyDown = Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.Space);
+        bool isKeyDown = Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.Space);
+        return isKeyDown;
+    }
+    private bool getJumpKeyDown()
+    {
+        bool isKeyDown = Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.Space);
         return isKeyDown;
     }
 
+
     private bool getDownKey()
     {
-        bool isKeyDown = Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S);
+        bool isKeyDown = Input.GetKey(KeyCode.DownArrow);
         return isKeyDown;
     }
 
@@ -250,15 +345,7 @@ public class Player : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if(collision.transform.tag == "Platform" && _stateMachine.curState == (int)STATE.JUMP)
-        {
-            Vector2 colPos = collision.GetContact(0).point;
-            if(colPos.y < transform.localPosition.y)
-            {
-                _stateMachine.curState = (int)STATE.IDLE;
-                transform.localPosition = new Vector2(transform.localPosition.x, colPos.y + transform.localScale.y * 0.5f);
-            }
-        }
+
     }
 
 }
