@@ -62,7 +62,7 @@ public class Player : MonoBehaviour
 
     private void Awake()
     {
-        _stateMachine = gameObject.GetComponent<StateMachine>();
+        _stateMachine = gameObject.AddComponent<StateMachine>();
 
         _stateMachine.SetCallback(IDLE, StIdle, StIdleBegin, null);
         _stateMachine.SetCallback(WALK, StWalk, null, null);
