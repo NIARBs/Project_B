@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
@@ -20,6 +21,7 @@ public class Player : MonoBehaviour
         Lv_END,
     }
 
+    #region state
     private const int IDLE = 0;
     private const int WALK = 1;
     private const int JUMP = 2;
@@ -27,15 +29,24 @@ public class Player : MonoBehaviour
     private const int CROUCH = 4;
     private const int CLIMB = 5;
     private const int WallJump = 6;
+    #endregion
+
+    #region globalState
+    private const int PANIC_LV0 = 0;
+    private const int PANIC_LV1 = 1;
+    private const int PANIC_LV2 = 2;
+    private const int PANIC_LV3 = 3;
+    #endregion
+
+    [SerializeField] public Text PanicText;
 
     [SerializeField] public float Speed = 1;
     [SerializeField] public float MaxSpeed = 10;
     [SerializeField] public float RollSpeed = 0.5f;
     [SerializeField] public float RollTime = 0.5f;
     [SerializeField] public float JumpSpeed = 5;
-    [SerializeField] private PANIC_LV PanicState = PANIC_LV.Lv2;
-    [SerializeField] private float TrembleDist = 0.5f;
-    [SerializeField] public float TrembleLv2Speed = 0.01f;
+    [SerializeField] private float panicScore = 0.0f;
+    [SerializeField] private float trembleDist = 0.2f;
 
     private Rigidbody2D _rigid;
     private Vector2 _dir;
@@ -43,18 +54,15 @@ public class Player : MonoBehaviour
     private Vector2 _trembleDir = Vector2.right;
 
     private float _accRollTime = 0;
-    private float _accTrembleDist = 0;
     private float _gravity = 0;
 
     private bool _canWallJump = true;
 
     StateMachine _stateMachine;
 
-    
-
     private void Awake()
     {
-        _stateMachine = new StateMachine { };
+        _stateMachine = gameObject.GetComponent<StateMachine>();
 
         _stateMachine.SetCallback(IDLE, StIdle, StIdleBegin, null);
         _stateMachine.SetCallback(WALK, StWalk, null, null);
@@ -62,6 +70,11 @@ public class Player : MonoBehaviour
         _stateMachine.SetCallback(ROLL, StRoll, StRollBegin, StRollEnd);
         _stateMachine.SetCallback(CROUCH, StCrouch, StCrouchBegin, StCrouchEnd);
         _stateMachine.SetCallback(CLIMB, StClimbUpdate, StClimbBegin, StclimbEnd);
+
+        _stateMachine.SetGlobalCallback(PANIC_LV0, GstPanicLv0, null, null);
+        _stateMachine.SetGlobalCallback(PANIC_LV1, GstPanicLv1, GstPanicLv1Begin, null);
+        _stateMachine.SetGlobalCallback(PANIC_LV2, GstPanicLv2, GstPanicLv2Begin, null);
+        _stateMachine.SetGlobalCallback(PANIC_LV3, GstPanicLv3, null, null);
     }
 
     
@@ -77,25 +90,21 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        _stateMachine.Update();
-    }
-
-      private void FixedUpdate()
-    {
+        // 속도
         if (_rigid.velocity.x > MaxSpeed)
             _rigid.velocity = new Vector2(MaxSpeed, _rigid.velocity.y);
         else if (_rigid.velocity.x < -MaxSpeed)
             _rigid.velocity = new Vector2(-MaxSpeed, _rigid.velocity.y);
 
-
+        //디버깅용 레이 그린거
         Debug.DrawRay(_rigid.position, Vector3.down, Color.red);
         Debug.DrawRay(_rigid.position, Vector3.right * 0.5f, Color.red);
         Debug.DrawRay(_rigid.position, Vector3.left * 0.5f, Color.red);
-        
 
+        //landing 체크
         if (_rigid.velocity.y <= 0)
         {
-            RaycastHit2D rayHit = Physics2D.Raycast(_rigid.position, Vector3.down , 1, LayerMask.GetMask("Platform"));
+            RaycastHit2D rayHit = Physics2D.Raycast(_rigid.position, Vector3.down, 1, LayerMask.GetMask("Platform"));
             if (rayHit.collider != null && _stateMachine.curState == JUMP)
             {
                 if (rayHit.distance <= 0.6)
@@ -105,26 +114,85 @@ public class Player : MonoBehaviour
             }
         }
 
+        // 패닉 대충 그리기
+        Vector3 position = _rigid.position;
+        position.x -= transform.localScale.x * 0.5f;
+        position.y += transform.localScale.y;
+        Debug.DrawRay(position, Vector3.right * panicScore * 0.01f, Color.blue);
     }
 
-    void trembleLv2()
+    private int GstPanicLv0()
     {
-        float moveDist = TrembleLv2Speed * Time.deltaTime;
-        _accTrembleDist += moveDist;
-
-        transform.Translate(_trembleDir * moveDist);
-        if(_accTrembleDist >= TrembleDist)
+        if (panicScore >= 50)
         {
-            _trembleDir.x *= -1;
-            _accTrembleDist = 0;
+            return PANIC_LV1;
         }
+
+        return PANIC_LV0;
     }
+
+    void GstPanicLv1Begin()
+    {
+        PanicText.text = "PANIC_LV1, 똑바로 해라잉";
+    }
+
+    private int GstPanicLv1()
+    {
+        if(panicScore < 50)
+        {
+            return PANIC_LV0;
+        }
+        else if (panicScore >= 75)
+        {
+            return PANIC_LV2;
+        }
+
+        return PANIC_LV1;
+    }
+
+    void GstPanicLv2Begin()
+    {
+        PanicText.text = "오줌 지림. 쌍욕을 하는데, 텍스트가 작게 비뚤어진다.";
+        Vector3 rotation = PanicText.gameObject.transform.localEulerAngles;
+        rotation.y = 30;
+        PanicText.gameObject.transform.localEulerAngles = rotation;
+    }
+
+    private int GstPanicLv2()
+    {
+        if (panicScore < 75)
+            return PANIC_LV1;
+
+        else if (panicScore >= 99)
+            return PANIC_LV3;
+
+        float random = Random.Range(-trembleDist, trembleDist);
+        Vector3 dir = Vector3.right;
+        dir.x *= random;
+
+        transform.Translate(dir);
+
+        return PANIC_LV2;
+    }
+
+    private int GstPanicLv3()
+    {
+
+        return PANIC_LV3;
+    }
+
     private void StIdleBegin()
     {
         _canWallJump = true;
     }
+
     private int StIdle()
     {
+        if (true == getJumpKeyDown())
+        {
+            return JUMP;
+        }
+
         if (true == getRightKey())
         {
             _dir = Vector2.right;
@@ -136,11 +204,8 @@ public class Player : MonoBehaviour
             return WALK;
         }
 
-        if (true == getJumpKeyDown())
-        {
-            return JUMP;
-        }
-        else if (true == getDownKey())
+        
+        if (true == getDownKey())
         {
             return CROUCH;
         }
@@ -154,6 +219,7 @@ public class Player : MonoBehaviour
 
     int StWalk()
     {
+        // 캐릭터 컨트롤러의 무브
         _rigid.AddForce(_dir * Speed, ForceMode2D.Impulse);
 
         if (false == getRightKey() && _dir == Vector2.right)
@@ -229,23 +295,37 @@ public class Player : MonoBehaviour
             if (_canWallJump == false)
                 break;
 
-            RaycastHit2D rayHit = Physics2D.Raycast(_rigid.position, Vector3.left, 1, LayerMask.GetMask("Platform"));
-            if (rayHit.collider != null)
+            do // 왼쪽 벽 체크
             {
-                if (rayHit.distance <= 0.5)
-                {
-                    return CLIMB;
-                }
-            }
+                RaycastHit2D rayHit = Physics2D.Raycast(_rigid.position, Vector3.left, 1, LayerMask.GetMask("Platform"));
+                if (rayHit.collider == null)
+                    break;
 
-            rayHit = Physics2D.Raycast(_rigid.position, Vector3.right, 1, LayerMask.GetMask("Platform"));
-            if (rayHit.collider != null)
-            {
-                if (rayHit.distance <= 0.5)
+                if (rayHit.distance > 0.6)
+                    break;
+                
+                if(getJumpKeyDown() == true)
                 {
-                    return CLIMB;
+                    _rigid.AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
                 }
-            }
+
+            } while (false);
+
+            do // 오른쪽 벽 체크
+            {
+                RaycastHit2D rayHit = Physics2D.Raycast(_rigid.position, Vector3.right, 1, LayerMask.GetMask("Platform"));
+                if (rayHit.collider == null)
+                    break;
+
+                if (rayHit.distance > 0.6)
+                    break;
+
+                if (getJumpKeyDown() == true)
+                {
+                    _rigid.AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
+                }
+
+            } while (false);
 
         } while (false);
 
@@ -318,18 +398,15 @@ public class Player : MonoBehaviour
 
     private bool getJumpKey()
     {
-        if (PanicState == PANIC_LV.Lv3)
-            return false;
-
         bool isKeyDown = Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.Space);
         return isKeyDown;
     }
+
     private bool getJumpKeyDown()
     {
         bool isKeyDown = Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.Space);
         return isKeyDown;
     }
-
 
     private bool getDownKey()
     {
@@ -345,7 +422,7 @@ public class Player : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-
+        
     }
 
 }

@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6187116552997394893}
+  - component: {fileID: 1877425828638460977}
   - component: {fileID: 6187116552997394890}
   - component: {fileID: 6187116552997394892}
   - component: {fileID: 6187116552997394895}
@@ -39,6 +40,18 @@ RectTransform:
   m_AnchoredPosition: {x: -7.33, y: -0.41999996}
   m_SizeDelta: {x: 1.0044248, y: 1.0044248}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1877425828638460977
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6187116552997394891}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d974114ad4724d4ea951c4bff73eabc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!212 &6187116552997394890
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -101,11 +114,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Speed: 5
+  MaxSpeed: 10
   RollSpeed: 5
   RollTime: 0.5
   JumpSpeed: 5
   PanicState: 0
-  Panic_Lv3: 0
   TrembleDist: 0.5
   TrembleLv2Speed: 0.2
 --- !u!50 &6187116552997394895
