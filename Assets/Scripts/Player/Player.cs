@@ -74,10 +74,8 @@ public class Player : MonoBehaviour
         _stateMachine.SetGlobalCallback(PANIC_LV0, GstPanicLv0, null, null);
         _stateMachine.SetGlobalCallback(PANIC_LV1, GstPanicLv1, GstPanicLv1Begin, null);
         _stateMachine.SetGlobalCallback(PANIC_LV2, GstPanicLv2, GstPanicLv2Begin, null);
-        _stateMachine.SetGlobalCallback(PANIC_LV3, GstPanicLv3, null, null);
+        _stateMachine.SetGlobalCallback(PANIC_LV3, GstPanicLv3, GstPanicLv3Begin, null);
     }
-
-    
 
     // Start is called before the first frame update
     void Start()
@@ -175,8 +173,14 @@ public class Player : MonoBehaviour
         return PANIC_LV2;
     }
 
+    private void GstPanicLv3Begin()
+    {
+        _stateMachine.Stop = true;
+    }
+
     private int GstPanicLv3()
     {
+
 
         return PANIC_LV3;
     }

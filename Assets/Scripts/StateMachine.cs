@@ -32,11 +32,17 @@ public class StateMachine : MonoBehaviour
     public int globalState { get; private set; }
     public int curState { get; private set; }
 
+    public bool Stop { get; set; }
+
     public void Update()
     {
         int globalRet = dicGlobalState[globalState].update.Invoke();
-        int ret = dicState[curState].update.Invoke();
-
+        int ret = curState;
+        if (Stop == false)
+        {
+            ret = dicState[curState].update.Invoke();
+        }
+        
         if (curState != ret)
         {
             dicState[curState].end?.Invoke();
