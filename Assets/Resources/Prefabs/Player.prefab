@@ -100,14 +100,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c32f5c1083eaee145a7d7dec5470242b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  PanicText: {fileID: 0}
   Speed: 3
   MaxSpeed: 8
   RollSpeed: 5
   RollTime: 0.5
   JumpSpeed: 15
-  PanicState: 0
-  TrembleDist: 0.5
-  TrembleLv2Speed: 0.2
+  panicScore: 0
+  trembleDist: 0.2
 --- !u!50 &6187116552997394895
 Rigidbody2D:
   serializedVersion: 4
