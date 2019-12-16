@@ -390,31 +390,31 @@ public class Player : MonoBehaviour
 
     private bool getRightKey()
     {
-        bool isKeyDown = Input.GetKey(KeyCode.RightArrow);
+        bool isKeyDown = Input.GetKey(KeyCode.D);
         return isKeyDown;
     }
 
     private bool getLeftKey()
     {
-        bool isKeyDown = Input.GetKey(KeyCode.LeftArrow);
+        bool isKeyDown = Input.GetKey(KeyCode.A);
         return isKeyDown;
     }
 
     private bool getJumpKey()
     {
-        bool isKeyDown = Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.Space);
+        bool isKeyDown = Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.Space);
         return isKeyDown;
     }
 
     private bool getJumpKeyDown()
     {
-        bool isKeyDown = Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.Space);
+        bool isKeyDown = Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.Space);
         return isKeyDown;
     }
 
     private bool getDownKey()
     {
-        bool isKeyDown = Input.GetKey(KeyCode.DownArrow);
+        bool isKeyDown = Input.GetKey(KeyCode.S);
         return isKeyDown;
     }
 
