@@ -7,6 +7,7 @@ public class EyeSight : MonoBehaviour
 {
     [SerializeField] GameObject player;
     [SerializeField] GameObject head;
+    [SerializeField] GameObject eyeSight;
 
     [SerializeField] bool isTracking = true;
 
@@ -50,6 +51,7 @@ public class EyeSight : MonoBehaviour
         float convertToAngle = ConvertToAngle(unityAngle);
         
         head.transform.localEulerAngles = new Vector3(0, 0, convertToAngle);
+        eyeSight.transform.localEulerAngles = new Vector3(0, 0, convertToAngle - 90);
     }
 
     float ConvertToAngle(float unityAngle)
@@ -87,11 +89,13 @@ public class EyeSight : MonoBehaviour
         {
             isRightFrontHead = false;
             head.transform.localScale = new Vector3(head.transform.localScale.x, -head.transform.localScale.y, 1);
+            // eyeSight.transform.localScale = new Vector3(eyeSight.transform.localScale.x, -eyeSight.transform.localScale.y, 1);
         }
         else if(!isRightFrontHead && mousePos.x > playerPos.x)
         {
             isRightFrontHead = true;
             head.transform.localScale = new Vector3(head.transform.localScale.x, -head.transform.localScale.y, 1);
+            // eyeSight.transform.localScale = new Vector3(eyeSight.transform.localScale.x, -eyeSight.transform.localScale.y, 1);
         }
     }
 
