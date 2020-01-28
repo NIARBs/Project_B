@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 2606485754215010711}
   m_Layer: 8
   m_Name: Bottom
-  m_TagString: Platform
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -570,7 +570,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &3496521860891113516
 Transform:
   m_ObjectHideFlags: 0
