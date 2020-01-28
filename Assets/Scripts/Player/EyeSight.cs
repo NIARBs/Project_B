@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Experimental.Rendering.LWRP;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,6 +20,7 @@ public class EyeSight : MonoBehaviour
     private float downLeftAngle;
 
     private bool isRightFrontHead = true;
+    private bool isTrackingPoint = false;
 
     private Vector3 mousePos;
     private Vector3 playerPos;
@@ -28,16 +30,26 @@ public class EyeSight : MonoBehaviour
         upLeftAngle = 90.0f + limitEyeSightRange;
         downRightAngle = -90.0f + limitEyeSightRange;
         downLeftAngle = 270.0f - limitEyeSightRange;
+        
+        if(eyeSight.GetComponent<Light2D>().lightType == Light2D.LightType.Point)
+        {
+            isTrackingPoint = eyeSight.name == "EyeSight_Point";
+        }
     }
     void FixedUpdate()
     {
-        if(isTracking)
+        if(!isTrackingPoint && isTracking)
         {
             mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             playerPos = player.transform.position;
 
             TrackingMouse();
             SetPlayerHeadFront();
+        }
+        else if(isTrackingPoint && isTracking)
+        {
+            mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition); 
+            eyeSight.transform.position = new Vector3(mousePos.x, mousePos.y, 0);
         }
     }
 
