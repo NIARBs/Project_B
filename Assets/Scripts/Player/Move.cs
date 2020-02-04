@@ -52,9 +52,6 @@ public class Move : MonoBehaviour
     [SerializeField]
     private BoxCollider2D boxCollider;
 
-    [SerializeField]
-    private TextDebugger textDebugger;
-
     void Reset()
     {
         boxCollider = GetComponent<BoxCollider2D>();
@@ -165,14 +162,6 @@ public class Move : MonoBehaviour
         // 계산 후 실제 속도 적용
         transform.Translate(moveVector);
         transform.rotation = Quaternion.identity;
-
-        AddText("Internal X Speed : " + internalXSpeed);
-        AddText("X Speed : " + moveVector.x);
-        AddText("Y Speed : " + moveVector.y);
-        AddText("isGrounded : " + isGrounded);
-        AddText("isOnWall  : " + isOnWall);
-        AddText("WallDirection  : " + wallDirection);
-        AddText("Speed : " + moveVector.magnitude);
     }
 
 
@@ -255,13 +244,6 @@ public class Move : MonoBehaviour
                         wallDirection = WallDirection.RIGHT;
                     }
                 }
-                
-                AddText("Horizontal Hit [" + i + "] : O : " + hit.distance * xSign);
-            }
-
-            else
-            {
-                AddText("Horizontal Hit [" + i + "] : X");
             }
         }
     }
@@ -312,14 +294,6 @@ public class Move : MonoBehaviour
                     minDist = Mathf.Min(minDist, hit.distance);
                     isGrounded = true;
                 }
-                
-                AddText("Vertical Hit [" + i + "] : O : " + hit.distance);
-            }
-
-            
-            else
-            {
-                AddText("Vertical Hit [" + i + "] : X : " + verticalHitLength);
             }
         }
 
@@ -334,13 +308,5 @@ public class Move : MonoBehaviour
                 moveVector.y = (minDist - bufferDist) * ySign;
             }
         }
-    }
-
-
-    // 화면의 디버깅 콘솔
-    void AddText(string text)
-    {
-        if(textDebugger == null) return;
-        textDebugger.AddText(text);
     }
 }
