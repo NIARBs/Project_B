@@ -36,6 +36,27 @@ public class EyeSight : MonoBehaviour
             isTrackingPoint = eyeSight.name == "EyeSight_Point";
         }
     }
+
+    void Update()
+    {
+        // 디버깅용
+        Debug.DrawRay(head.transform.position, mousePos - playerPos, Color.red);
+        // Debug.DrawRay(head.transform.position, Vector3.right * 0.5f, Color.red);
+        // Debug.DrawRay(head.transform.position, Vector3.left * 0.5f, Color.red);
+
+        // if (eyeSight.velocity.y <= 0)
+        // {
+        //     RaycastHit2D rayHit = Physics2D.Raycast(_rigid.position, Vector3.down, 1, LayerMask.GetMask("Platform"));
+        //     if (rayHit.collider != null && _stateMachine.curState == JUMP)
+        //     {
+        //         if (rayHit.distance <= 0.6)
+        //         {
+        //             _stateMachine.changeState(IDLE);
+        //         }
+        //     }
+        // }
+    }
+
     void FixedUpdate()
     {
         if(!isTrackingPoint && isTracking)
