@@ -25,12 +25,15 @@ public class EyeSight : MonoBehaviour
     private Vector3 mousePos;
     private Vector3 playerPos;
 
+    private GameObject hitObj = null;
+    private bool alreadyHit = false;
+
     void Start() {
         upRightAngle = 90.0f - limitEyeSightRange;
         upLeftAngle = 90.0f + limitEyeSightRange;
         downRightAngle = -90.0f + limitEyeSightRange;
         downLeftAngle = 270.0f - limitEyeSightRange;
-        
+
         if(eyeSight.GetComponent<Light2D>().lightType == Light2D.LightType.Point)
         {
             isTrackingPoint = eyeSight.name == "EyeSight_Point";
@@ -39,22 +42,44 @@ public class EyeSight : MonoBehaviour
 
     void Update()
     {
+        RaycastHit2D hit = Physics2D.Raycast(head.transform.position, mousePos - playerPos, 8);
+        if(hit)
+        {
+            if(hit.collider.gameObject == null)
+            {
+                hitObj = null;
+            }
+            if(hitObj != null && hit.collider.gameObject == hitObj)
+            {
+                alreadyHit = true;
+            }
+            if(hitObj != null && hit.collider.gameObject != hitObj)
+            {
+                alreadyHit = false;
+                
+                // 전에 인식된 오브젝트가 생체인식일 경우
+                if(hitObj.CompareTag("BiometricSensor"))
+                {
+                    hitObj.GetComponent<BiometricSensor>().PlayerExitSensor();
+                }
+                hitObj = hit.collider.gameObject;
+            }
+            hitObj = hit.collider.gameObject;
+            if(hitObj != null && !alreadyHit)
+            {
+                // 현재 인식된 오브젝트가 생체인식일 경우
+                if(hit.collider.CompareTag("BiometricSensor"))
+                {
+                    hitObj.GetComponent<BiometricSensor>().CheckStayPlayer();
+                }
+                Debug.Log(hit.collider.gameObject.name);
+            }
+        }
+
         // 디버깅용
         Debug.DrawRay(head.transform.position, mousePos - playerPos, Color.red);
         // Debug.DrawRay(head.transform.position, Vector3.right * 0.5f, Color.red);
         // Debug.DrawRay(head.transform.position, Vector3.left * 0.5f, Color.red);
-
-        // if (eyeSight.velocity.y <= 0)
-        // {
-        //     RaycastHit2D rayHit = Physics2D.Raycast(_rigid.position, Vector3.down, 1, LayerMask.GetMask("Platform"));
-        //     if (rayHit.collider != null && _stateMachine.curState == JUMP)
-        //     {
-        //         if (rayHit.distance <= 0.6)
-        //         {
-        //             _stateMachine.changeState(IDLE);
-        //         }
-        //     }
-        // }
     }
 
     void FixedUpdate()
