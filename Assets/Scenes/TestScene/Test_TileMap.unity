@@ -1691,6 +1691,11 @@ PrefabInstance:
       propertyPath: m_Size.y
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 11536500927114691, guid: 83f692d99f1188445a1a913e4a78d448,
+        type: 3}
+      propertyPath: isReturnBlock
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 11536500927114692, guid: 83f692d99f1188445a1a913e4a78d448,
         type: 3}
       propertyPath: m_Materials.Array.data[0]
