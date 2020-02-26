@@ -43,17 +43,14 @@ public class MoveBlock : MonoBehaviour
         {
             if(!isReturn && isReturnBlock)
             {
-                Debug.Log("되돌아가는 중");
                 if(state == EMoveBlockState.LeftAndRight)
                 {
-                    StartCoroutine("StartReturnMoveLeftAndRight");
+                    ReturnMoveLeftAndRight();
                 }
                 else if(state == EMoveBlockState.BottomAndTop)
                 {
-                    StartCoroutine("StartReturnMoveBottomAndTop");
+                    ReturnMoveBottomAndTop();
                 }
-
-                isReturn = true;
             }
             return;
         }
@@ -118,48 +115,26 @@ public class MoveBlock : MonoBehaviour
         }
     }
 
-    IEnumerator StartReturnMoveLeftAndRight()
+    void ReturnMoveLeftAndRight()
     {
-        while(originCoord.x + 0.2 < this.transform.position.x || originCoord.x - 0.2 > this.transform.position.x)
+        MoveLeftAndRight();
+
+        if(originCoord.x + 0.05 >= this.transform.position.x && originCoord.x - 0.05 <= this.transform.position.x)
         {
-            Vector3 moveDirection = Vector3.zero;
-
-            if (isDst)
-            {
-                moveDirection = Vector3.right;
-            }
-            else
-            {
-                moveDirection = Vector3.left;
-            }
-
-            this.transform.position += moveDirection * moveSpeed * 0.01f;
-
-            yield return new WaitForSeconds(0.1f);
+            this.transform.position = originCoord;
+            isReturn = true;
         }
-        Debug.Log("되돌아옴");
     }
 
-    IEnumerator StartReturnMoveBottomAndTop()
+    void ReturnMoveBottomAndTop()
     {
-        while(originCoord.y + 0.2 < this.transform.position.y || originCoord.y - 0.2 > this.transform.position.y)
+        MoveBottomAndTop();
+
+        if(originCoord.y + 0.05 >= this.transform.position.y && originCoord.y - 0.05 <= this.transform.position.y)
         {
-            Vector3 moveDirection = Vector3.zero;
-
-            if (isDst)
-            {
-                moveDirection = Vector3.up;
-            }
-            else
-            {
-                moveDirection = Vector3.down;
-            }
-
-            this.transform.position += moveDirection * moveSpeed * 0.01f;
-
-            yield return new WaitForSeconds(0.1f);
+            this.transform.position = originCoord;
+            isReturn = true;
         }
-        Debug.Log("되돌아옴");
     }
 
     public void SetPause(bool pause)
