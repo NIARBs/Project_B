@@ -18,14 +18,19 @@ public class MoveBlock : MonoBehaviour
   
     [SerializeField] float SrcCoord = -1.0f;
     [SerializeField] float DstCoord = 1.0f;
+    [SerializeField] bool isReturnBlock = false;
 
+    private Vector2 originCoord;
     private Vector2 originSrcCoord;
     private Vector2 originDstCoord;
     private bool isDst = false;
     private bool isPause = false;
+    private bool isReturn = false;
 
     void Start()
     {
+        originCoord.x = this.transform.position.x;
+        originCoord.y = this.transform.position.y;
         originSrcCoord.x = this.transform.position.x + SrcCoord;
         originSrcCoord.y = this.transform.position.y + SrcCoord;
         originDstCoord.x = this.transform.position.x + DstCoord;
@@ -36,6 +41,17 @@ public class MoveBlock : MonoBehaviour
     {
         if(isPause)
         {
+            if(!isReturn && isReturnBlock)
+            {
+                if(state == EMoveBlockState.LeftAndRight)
+                {
+                    ReturnMoveLeftAndRight();
+                }
+                else if(state == EMoveBlockState.BottomAndTop)
+                {
+                    ReturnMoveBottomAndTop();
+                }
+            }
             return;
         }
 
@@ -99,9 +115,35 @@ public class MoveBlock : MonoBehaviour
         }
     }
 
+    void ReturnMoveLeftAndRight()
+    {
+        MoveLeftAndRight();
+
+        if(originCoord.x + 0.05 >= this.transform.position.x && originCoord.x - 0.05 <= this.transform.position.x)
+        {
+            this.transform.position = originCoord;
+            isReturn = true;
+        }
+    }
+
+    void ReturnMoveBottomAndTop()
+    {
+        MoveBottomAndTop();
+
+        if(originCoord.y + 0.05 >= this.transform.position.y && originCoord.y - 0.05 <= this.transform.position.y)
+        {
+            this.transform.position = originCoord;
+            isReturn = true;
+        }
+    }
+
     public void SetPause(bool pause)
     {
         isPause = pause;
+        if(isPause)
+        {
+            isReturn = false;
+        }
     }
 }
 
