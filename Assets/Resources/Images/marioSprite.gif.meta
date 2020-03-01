@@ -58,7 +58,7 @@ TextureImporter:
     second: marioSprite_17
   - first:
       213: -6498974498411041989
-    second: marioSprite_18
+    second: pipe1
   - first:
       213: -3088836552641799751
     second: marioSprite_19
@@ -2108,7 +2108,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: marioSprite_18
+      name: pipe1
       rect:
         serializedVersion: 2
         x: 614
