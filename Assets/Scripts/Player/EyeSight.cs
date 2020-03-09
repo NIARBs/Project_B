@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.Experimental.Rendering.LWRP;
+using UnityEngine.Experimental.Rendering.Universal;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -28,7 +28,8 @@ public class EyeSight : MonoBehaviour
     private GameObject hitObj = null;
     private bool alreadyHit = false;
 
-    void Start() {
+    void Start() 
+    {
         upRightAngle = 90.0f - limitEyeSightRange;
         upLeftAngle = 90.0f + limitEyeSightRange;
         downRightAngle = -90.0f + limitEyeSightRange;
