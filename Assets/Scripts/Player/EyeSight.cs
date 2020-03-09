@@ -84,18 +84,24 @@ public class EyeSight : MonoBehaviour
 
     void FixedUpdate()
     {
-        if(!isTrackingPoint && isTracking)
+        if(isTracking)
         {
-            mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            playerPos = player.transform.position;
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            Plane xy = new Plane(Vector3.forward, new Vector3(0, 0, 0));
+            float distance;
+            xy.Raycast(ray, out distance);
+            mousePos = ray.GetPoint(distance);
+            if(isTrackingPoint)
+            {
+                eyeSight.transform.position = new Vector3(mousePos.x, mousePos.y, 0);
+            }
+            else
+            {
+                playerPos = player.transform.position;
 
-            TrackingMouse();
-            SetPlayerHeadFront();
-        }
-        else if(isTrackingPoint && isTracking)
-        {
-            mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition); 
-            eyeSight.transform.position = new Vector3(mousePos.x, mousePos.y, 0);
+                TrackingMouse();
+                SetPlayerHeadFront();
+            }
         }
     }
 
