@@ -14,7 +14,7 @@ public class Swordman : PlayerController
         m_Anim = this.transform.Find("model").GetComponent<Animator>();
         m_rigidbody = this.transform.GetComponent<Rigidbody2D>();
   
-
+        
     }
 
 
@@ -53,7 +53,7 @@ public class Swordman : PlayerController
         else if (Input.GetKeyUp(KeyCode.S))
         {
 
-            m_Anim.Play("Idle");
+            m_Anim.Play("Player_Idle");
             IsSit = false;
 
         }
@@ -96,13 +96,13 @@ public class Swordman : PlayerController
                 if (m_MoveX == 0)
                 {
                     if (!OnceJumpRayCheck)
-                        m_Anim.Play("Idle");
+                        m_Anim.Play("Player_Idle");
 
                 }
                 else
                 {
-
-                    m_Anim.Play("Run");
+                    
+                    m_Anim.Play("Player_Run");
                 }
 
             }
@@ -223,8 +223,8 @@ public class Swordman : PlayerController
     {
 
 
-        if (!m_Anim.GetCurrentAnimatorStateInfo(0).IsName("Run") && !m_Anim.GetCurrentAnimatorStateInfo(0).IsName("Attack"))
-            m_Anim.Play("Idle");
+        if (!m_Anim.GetCurrentAnimatorStateInfo(0).IsName("Player_Run") && !m_Anim.GetCurrentAnimatorStateInfo(0).IsName("Attack"))
+            m_Anim.Play("Player_Idle");
 
     }
 
