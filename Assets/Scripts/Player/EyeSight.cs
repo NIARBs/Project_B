@@ -34,7 +34,7 @@ public class EyeSight : MonoBehaviour
         downRightAngle = -90.0f + limitEyeSightRange;
         downLeftAngle = 270.0f - limitEyeSightRange;
 
-        if(eyeSight.GetComponent<Light2D>().lightType == Light2D.LightType.Point)
+        if(eyeSight.GetComponent<UnityEngine.Experimental.Rendering.Universal.Light2D>().lightType == UnityEngine.Experimental.Rendering.Universal.Light2D.LightType.Point)
         {
             isTrackingPoint = eyeSight.name == "EyeSight_Point";
         }
