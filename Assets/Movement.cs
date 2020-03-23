@@ -6,6 +6,8 @@ using DG.Tweening;
 
 public class Movement : MonoBehaviour
 {
+    protected Animator m_Anim;
+
     private Collision coll;
     [HideInInspector]
     public Rigidbody2D rb;
@@ -14,7 +16,7 @@ public class Movement : MonoBehaviour
     [Space]
     [Header("Stats")]
     public float speed = 10;
-    public float acceleration = 1;
+    public float acceleration = 20;
     public float jumpForce = 50;
     public float slideSpeed = 5;
     public float wallJumpLerp = 10;
@@ -57,6 +59,9 @@ public class Movement : MonoBehaviour
 
     void Start()
     {
+        m_Anim = this.transform.Find("model").GetComponent<Animator>();
+        //m_Anim.Play("Player_Idle");
+        m_Anim.Play("Player_Jump");
         coll = GetComponent<Collision>();
         rb = GetComponent<Rigidbody2D>();
     }
@@ -241,6 +246,16 @@ public class Movement : MonoBehaviour
     {
         if (Input.GetAxisRaw("Horizontal") == 0)
             accAccleration = 0;
+        else
+        {
+            if(transform.localScale.x == Input.GetAxisRaw("Horizontal"))
+                accAccleration = 0;
+
+            m_Anim.Play("Player_Run");
+            transform.localScale = new Vector3(-1 * Input.GetAxisRaw("Horizontal"), 1, 1);
+        }
+            
+
 
         if (!canMove)
             return;
@@ -283,6 +298,7 @@ public class Movement : MonoBehaviour
 
     private void Jump(Vector2 dir, bool wall)
     {
+        m_Anim.Play("Player_Jump");
         rb.velocity = new Vector2(rb.velocity.x, 0);
         rb.velocity += dir * jumpForce;
 
