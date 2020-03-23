@@ -60,8 +60,8 @@ public class Movement : MonoBehaviour
     void Start()
     {
         m_Anim = this.transform.Find("model").GetComponent<Animator>();
-        //m_Anim.Play("Player_Idle");
-        m_Anim.Play("Player_Jump");
+        m_Anim.Play("Player_Idle");
+        //m_Anim.Play("Player_Jump");
         coll = GetComponent<Collision>();
         rb = GetComponent<Rigidbody2D>();
     }
