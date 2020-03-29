@@ -14,12 +14,16 @@ public enum EBiometricSensorState
 
 public class BiometricSensor : MonoBehaviour
 {
-    [SerializeField] bool isOnce = true;
-
-    [SerializeField] EBiometricSensorState state = EBiometricSensorState.None;
-
+    [Header ("- 오브젝트 설정")]
     [SerializeField] GameObject target = null;
 
+    [Header ("- 오브젝트 종류 설정")]
+    [SerializeField] EBiometricSensorState state = EBiometricSensorState.None;
+
+    [Header ("- 한 번만 실행")]
+    [SerializeField] bool isOnce = true;
+
+    [Header ("- 인식 시간 (second)")]
     [SerializeField] float recognitionTime = 2.0f;
 
     private bool isActive = false;
