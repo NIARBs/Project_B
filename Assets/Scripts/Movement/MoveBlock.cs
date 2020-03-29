@@ -12,13 +12,16 @@ public enum EMoveBlockState
 
 public class MoveBlock : MonoBehaviour
 {
-    [SerializeField] float moveSpeed = 1f;
-
     public EMoveBlockState state = EMoveBlockState.LeftAndRight;
   
+    [Header ("- 이동할 거리")]
     [SerializeField] float SrcCoord = -1.0f;
     [SerializeField] float DstCoord = 1.0f;
+
+    [Header ("- 속성 설정")]
     [SerializeField] bool isReturnBlock = false;
+
+    [SerializeField] float moveSpeed = 1f;
 
     private Vector2 originCoord;
     private Vector2 originSrcCoord;
