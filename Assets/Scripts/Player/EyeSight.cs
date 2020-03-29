@@ -6,12 +6,15 @@ using UnityEngine.UI;
 
 public class EyeSight : MonoBehaviour
 {
+    [Header ("- 오브젝트 설정")]
     [SerializeField] GameObject player;
     [SerializeField] GameObject head;
     [SerializeField] GameObject eyeSight;
 
+    [Header ("- 마우스 트래킹 사용여부")]
     [SerializeField] bool isTracking = true;
 
+    [Header ("- 마우스 비트래킹 각도")]
     [SerializeField] float limitEyeSightRange = 50.0f;
 
     private float upRightAngle;
@@ -20,7 +23,6 @@ public class EyeSight : MonoBehaviour
     private float downLeftAngle;
 
     private bool isRightFrontHead = true;
-    private bool isTrackingPoint = false;
 
     private Vector3 mousePos;
     private Vector3 playerPos;
@@ -34,11 +36,6 @@ public class EyeSight : MonoBehaviour
         upLeftAngle = 90.0f + limitEyeSightRange;
         downRightAngle = -90.0f + limitEyeSightRange;
         downLeftAngle = 270.0f - limitEyeSightRange;
-
-        if(eyeSight.GetComponent<Light2D>().lightType == Light2D.LightType.Point)
-        {
-            isTrackingPoint = eyeSight.name == "EyeSight_Point";
-        }
     }
 
     void Update()
@@ -89,20 +86,14 @@ public class EyeSight : MonoBehaviour
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             Plane xy = new Plane(Vector3.forward, new Vector3(0, 0, 0));
+
             float distance;
             xy.Raycast(ray, out distance);
             mousePos = ray.GetPoint(distance);
-            if(isTrackingPoint)
-            {
-                eyeSight.transform.position = new Vector3(mousePos.x, mousePos.y, 0);
-            }
-            else
-            {
-                playerPos = player.transform.position;
+            playerPos = player.transform.position;
 
-                TrackingMouse();
-                SetPlayerHeadFront();
-            }
+            TrackingMouse();
+            SetPlayerHeadFront();
         }
     }
 
