@@ -10,6 +10,7 @@ public class HUDManager : MonoBehaviour
     [Header ("- 오브젝트 설정")]
     [SerializeField] GameObject hpUI;
     [SerializeField] GameObject panicBarUI;
+    [SerializeField] GameObject menuUI;
 
     private HUDManager() { }
 
@@ -28,7 +29,15 @@ public class HUDManager : MonoBehaviour
 
     void Update()
     {
-        
+        if(Input.GetKeyDown(KeyCode.Escape))
+        {
+            bool isActive = menuUI.activeInHierarchy;
+
+            menuUI.SetActive(!isActive);
+            
+            // 메뉴화면 열렸을 시, 게임 일시정지
+            Time.timeScale = menuUI.activeInHierarchy ? 0 : 1;
+        }
     }
 
     public static HUDManager GetInstance()
@@ -53,5 +62,14 @@ public class HUDManager : MonoBehaviour
         }
 
         panicBarUI.GetComponent<Image>().fillAmount = panic;
+    }
+
+    public void OnExit()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 }
