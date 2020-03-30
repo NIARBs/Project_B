@@ -59,6 +59,18 @@ public class Collision : MonoBehaviour
 
         onRightWall = Physics2D.OverlapCircle((Vector2)transform.position + rightOffset, collisionRadius, groundLayer);
         onLeftWall = Physics2D.OverlapCircle((Vector2)transform.position + leftOffset, collisionRadius, groundLayer);
+        if(onLeftWall == true && rb.velocity.y > 0)
+        {
+            onLeftWall = false;
+        }
+
+        if (onRightWall == true && rb.velocity.y > 0)
+        {
+            onRightWall = false;
+        }
+
+
+
         onWall = onRightWall || onLeftWall;
 
         wallSide = onRightWall ? -1 : 1;
