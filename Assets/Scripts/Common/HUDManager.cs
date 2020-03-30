@@ -64,7 +64,17 @@ public class HUDManager : MonoBehaviour
         panicBarUI.GetComponent<Image>().fillAmount = panic;
     }
 
-    public void OnExit()
+    public void OnResetClick()
+    {
+
+    }
+
+    public void OnSettingsClick()
+    {
+
+    }
+    
+    public void OnExitClick()
     {
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
