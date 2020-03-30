@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 2404775593247583486}
   - component: {fileID: 2404775593247583485}
   - component: {fileID: 2404775593247583484}
+  - component: {fileID: 248120520}
   m_Layer: 0
   m_Name: BiometricSensor
   m_TagString: BiometricSensor
@@ -47,6 +48,7 @@ SpriteRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -121,8 +123,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b023696610db2c4998179e93e334f35, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isOnce: 1
-  state: 0
   target: {fileID: 0}
-  sensingObject: {fileID: 0}
+  state: 5
+  isOnce: 0
   recognitionTime: 2
+--- !u!114 &248120520
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2404775593247583481}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7db70e0ea77f5ac47a8f4565a9406397, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_ShadowGroup: 0
+  m_HasRenderer: 1
+  m_UseRendererSilhouette: 1
+  m_CastsShadows: 1
+  m_SelfShadows: 0
+  m_ApplyToSortingLayers: 2d753fe9e5c8bcab000000000d7b9746
+  m_ShapePath:
+  - {x: -0.5, y: -0.5, z: 0}
+  - {x: 0.5, y: -0.5, z: 0}
+  - {x: 0.5, y: 0.5, z: 0}
+  - {x: -0.5, y: 0.5, z: 0}
+  m_ShapePathHash: 0
+  m_Mesh: {fileID: 0}
+  m_InstanceId: 16182

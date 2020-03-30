@@ -1,17 +1,20 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.Experimental.Rendering.LWRP;
+using UnityEngine.Experimental.Rendering.Universal;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class EyeSight : MonoBehaviour
 {
+    [Header ("- 오브젝트 설정")]
     [SerializeField] GameObject player;
     [SerializeField] GameObject head;
     [SerializeField] GameObject eyeSight;
 
+    [Header ("- 마우스 트래킹 사용여부")]
     [SerializeField] bool isTracking = true;
 
+    [Header ("- 마우스 비트래킹 각도")]
     [SerializeField] float limitEyeSightRange = 50.0f;
 
     private float upRightAngle;
@@ -20,7 +23,6 @@ public class EyeSight : MonoBehaviour
     private float downLeftAngle;
 
     private bool isRightFrontHead = true;
-    private bool isTrackingPoint = false;
 
     private Vector3 mousePos;
     private Vector3 playerPos;
@@ -28,16 +30,12 @@ public class EyeSight : MonoBehaviour
     private GameObject hitObj = null;
     private bool alreadyHit = false;
 
-    void Start() {
+    void Start() 
+    {
         upRightAngle = 90.0f - limitEyeSightRange;
         upLeftAngle = 90.0f + limitEyeSightRange;
         downRightAngle = -90.0f + limitEyeSightRange;
         downLeftAngle = 270.0f - limitEyeSightRange;
-
-        if(eyeSight.GetComponent<UnityEngine.Experimental.Rendering.Universal.Light2D>().lightType == UnityEngine.Experimental.Rendering.Universal.Light2D.LightType.Point)
-        {
-            isTrackingPoint = eyeSight.name == "EyeSight_Point";
-        }
     }
 
     void Update()
@@ -84,18 +82,18 @@ public class EyeSight : MonoBehaviour
 
     void FixedUpdate()
     {
-        if(!isTrackingPoint && isTracking)
+        if(isTracking)
         {
-            mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            Plane xy = new Plane(Vector3.forward, new Vector3(0, 0, 0));
+
+            float distance;
+            xy.Raycast(ray, out distance);
+            mousePos = ray.GetPoint(distance);
             playerPos = player.transform.position;
 
             TrackingMouse();
             SetPlayerHeadFront();
-        }
-        else if(isTrackingPoint && isTracking)
-        {
-            mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition); 
-            eyeSight.transform.position = new Vector3(mousePos.x, mousePos.y, 0);
         }
     }
 

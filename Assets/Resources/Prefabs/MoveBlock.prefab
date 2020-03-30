@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 11536500927114690}
   - component: {fileID: 279073248458359577}
   - component: {fileID: 11536500927114691}
+  - component: {fileID: 813011896}
   m_Layer: 8
   m_Name: MoveBlock
   m_TagString: MoveBlock
@@ -27,9 +28,9 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 11536500927114695}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.0044248, y: 1.0044248, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -37,7 +38,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 2, y: -2.5}
-  m_SizeDelta: {x: 1, y: 1}
+  m_SizeDelta: {x: 2, y: 1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!212 &11536500927114692
 SpriteRenderer:
@@ -53,6 +54,7 @@ SpriteRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -76,7 +78,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: -1413691163
   m_SortingLayer: -1
-  m_SortingOrder: 0
+  m_SortingOrder: 3
   m_Sprite: {fileID: -8087216778062963789, guid: 6c706997dc668b046a89724c9b4c9141,
     type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -113,7 +115,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 2, y: 1}
   m_EdgeRadius: 0
 --- !u!50 &279073248458359577
 Rigidbody2D:
@@ -148,7 +150,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9796dc175d6faa8409364adb09df4540, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 1
   state: 0
   SrcCoord: -1
   DstCoord: 1
+  isReturnBlock: 0
+  moveSpeed: 1
+--- !u!114 &813011896
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 11536500927114695}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7db70e0ea77f5ac47a8f4565a9406397, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_ShadowGroup: 0
+  m_HasRenderer: 1
+  m_UseRendererSilhouette: 1
+  m_CastsShadows: 1
+  m_SelfShadows: 0
+  m_ApplyToSortingLayers: 2d753fe9e5c8bcab000000000d7b9746
+  m_ShapePath:
+  - {x: -1.0044248, y: -0.5022124, z: 0}
+  - {x: 1.0044248, y: -0.5022124, z: 0}
+  - {x: 1.0044248, y: 0.5022124, z: 0}
+  - {x: -1.0044248, y: 0.5022124, z: 0}
+  m_ShapePathHash: 0
+  m_Mesh: {fileID: 0}
+  m_InstanceId: 18934
