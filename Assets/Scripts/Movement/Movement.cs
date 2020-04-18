@@ -11,7 +11,8 @@ public class Movement : MonoBehaviour
     private Collision coll;
     [HideInInspector]
     public Rigidbody2D rb;
- 
+
+    public GameObject playerBody;
 
     [Space]
     [Header("Stats")]
@@ -247,11 +248,11 @@ public class Movement : MonoBehaviour
             accAccleration = 0;
         else
         {
-            if(transform.localScale.x == Input.GetAxisRaw("Horizontal"))
+            if(playerBody.transform.localScale.x == Input.GetAxisRaw("Horizontal"))
                 accAccleration = 0;
 
             m_Anim.Play("Player_Run");
-            transform.localScale = new Vector3(-1 * Input.GetAxisRaw("Horizontal"), 1, 1);
+            playerBody.transform.localScale = new Vector3(-1 * Input.GetAxisRaw("Horizontal"), 1, 1);
         }
             
 
