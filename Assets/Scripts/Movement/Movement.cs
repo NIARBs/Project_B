@@ -244,18 +244,24 @@ public class Movement : MonoBehaviour
     private float accAccleration = 0;
     private void Walk(Vector2 dir)
     {
-        if (Input.GetAxisRaw("Horizontal") == 0)
+        float moveAxis = Input.GetAxisRaw("Horizontal");
+        float moveAbs = Mathf.Abs(moveAxis);
+
+        if (moveAxis == 0)
+        {
             accAccleration = 0;
+        }
         else
         {
-            if(playerBody.transform.localScale.x == Input.GetAxisRaw("Horizontal"))
+            if (playerBody.transform.localScale.x == moveAxis)
+            {
                 accAccleration = 0;
+            }
 
-            m_Anim.Play("Player_Run");
-            playerBody.transform.localScale = new Vector3(-1 * Input.GetAxisRaw("Horizontal"), 1, 1);
+            playerBody.transform.localScale = new Vector3(-1 * moveAxis, 1, 1);
         }
-            
 
+        m_Anim.SetFloat("Move", moveAbs);
 
         if (!canMove)
             return;
@@ -265,14 +271,14 @@ public class Movement : MonoBehaviour
 
         if (!wallJumped)
         {
-            accAccleration += Input.GetAxisRaw("Horizontal") * acceleration * Time.deltaTime;
+            accAccleration += moveAxis * acceleration * Time.deltaTime;
 
             float fHorizontalVelocity = rb.velocity.x;
             fHorizontalVelocity += accAccleration;
 
-            if (Mathf.Abs(Input.GetAxisRaw("Horizontal")) < 0.01f)
+            if (moveAbs < 0.01f)
                 fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingWhenStopping, Time.deltaTime * 10f);
-            else if (Mathf.Sign(Input.GetAxisRaw("Horizontal")) != Mathf.Sign(fHorizontalVelocity))
+            else if (Mathf.Sign(moveAxis) != Mathf.Sign(fHorizontalVelocity))
                 fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingWhenTurning, Time.deltaTime * 10f);
             else
                 fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingBasic, Time.deltaTime * 10f);
