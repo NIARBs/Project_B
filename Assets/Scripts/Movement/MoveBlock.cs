@@ -12,15 +12,18 @@ public enum EMoveBlockState
 
 public class MoveBlock : MonoBehaviour
 {
+    [Tooltip ("LeftAndRight: 좌우로 이동, BottomAndTop: 위/아래로 이동, Stop: 멈춤")]
     public EMoveBlockState state = EMoveBlockState.LeftAndRight;
   
-    [Header ("- 이동할 거리")]
+    [Header ("- 이동할 거리")][Tooltip ("출발 좌표를 입력합니다.")]
     [SerializeField] float SrcCoord = -1.0f;
+    [Tooltip ("목적 좌표를 입력합니다.")]
     [SerializeField] float DstCoord = 1.0f;
 
-    [Header ("- 속성 설정")]
+    [Header ("- 속성 설정")][Tooltip ("생체인식이 취소될 때, 플랫폼이 원래의 자리로 돌아올지를 설정합니다.")]
     [SerializeField] bool isReturnBlock = false;
 
+    [Tooltip ("플랫폼 이동 속도를 설정합니다.")]
     [SerializeField] float moveSpeed = 1f;
 
     private Vector2 originCoord;

@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class BiometricSensorDetection : MonoBehaviour
 {
+    [Tooltip ("생체인식 오브젝트를 넣습니다.")]
     [SerializeField] GameObject biometricSensor = null;
 
     void OnTriggerEnter2D(Collider2D collision)

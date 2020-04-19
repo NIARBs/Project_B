@@ -14,18 +14,19 @@ public class EyeSight : MonoBehaviour
         public float downLeftAngle;
     }
 
-    [Header ("- 오브젝트 설정")]
+    [Header ("- 오브젝트 설정")][Tooltip ("플레이어 캐릭터 오브젝트를 넣습니다.")]
     [SerializeField] GameObject player;
+    [Tooltip ("플레이어의 시야 오브젝트를 넣습니다.")]
     [SerializeField] GameObject eyeSight;
+    [Tooltip ("플레이어의 머리부분 오브젝트를 넣습니다. Bone이 있을 경우, 머리에 해당되는 Bone을 넣습니다.")]
     [SerializeField] GameObject head;
 
-    [Header ("- 마우스 트래킹 사용여부")]
+    [Header ("- 마우스 트래킹 설정")][Tooltip ("플레이어 캐릭터가 마우스를 쳐다볼 것인지 설정합니다.")]
     [SerializeField] bool isTracking = true;
-
-    [Header ("- 마우스 비트래킹 각도")]
+    [Tooltip ("플레이어 캐릭터가 마우스를 쳐다보는 각도를 제한합니다. 캐릭터를 기준으로 < 위(0도)와 아래(180도) +- limitEyeSightRange / 2 >")]
     [SerializeField] float limitEyeSightRange = 50.0f;
 
-    [Header ("- 플레이어 시작 방향")]
+    [Header ("- 플레이어, 시야 동기화")][Tooltip ("게임이 시작될 때 플레이어 캐릭터가 바라보는 방향을 설정합니다.")]
     [SerializeField] bool isRightFront = true;
 
     private bool isHeadFlip = false;
