@@ -53,7 +53,7 @@ public class EyeSight : MonoBehaviour
 
     void Update()
     {
-        RaycastHit2D hit = Physics2D.Raycast(head.transform.position, mousePos - playerPos, 8);
+        RaycastHit2D hit = Physics2D.Raycast(eyeSight.transform.position, mousePos - playerPos, 8);
         if(hit)
         {
             if(hit.collider.gameObject == null)
@@ -79,16 +79,17 @@ public class EyeSight : MonoBehaviour
             if(hitObj != null && !alreadyHit)
             {
                 // 현재 인식된 오브젝트가 생체인식일 경우
-                if(hit.collider.CompareTag("BiometricSensor"))
+                if (hit.collider.CompareTag("BiometricSensor"))
                 {
                     hitObj.GetComponent<BiometricSensor>().CheckStayPlayer();
                 }
-                Debug.Log(hit.collider.gameObject.name);
+
+                Debug.Log("시야 안에 들어온 물체: " + hit.collider.gameObject.name);
             }
         }
 
         // 디버깅용
-        Debug.DrawRay(head.transform.position, mousePos - playerPos, Color.red);
+        Debug.DrawRay(eyeSight.transform.position, mousePos - playerPos, Color.red);
         // Debug.DrawRay(head.transform.position, Vector3.right * 0.5f, Color.red);
         // Debug.DrawRay(head.transform.position, Vector3.left * 0.5f, Color.red);
     }
