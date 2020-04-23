@@ -15,6 +15,7 @@ public class Enemy_Mushroomy : Enemy
     {
         rigid = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+        capsuleCollider = GetComponent<CapsuleCollider2D>();
     }
 
     void Start()

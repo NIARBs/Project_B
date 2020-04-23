@@ -17,6 +17,7 @@ public class Enemy : MonoBehaviour
     [SerializeField] protected GameObject player;
     protected Rigidbody2D rigid;
     protected SpriteRenderer spriteRenderer;
+    protected CapsuleCollider2D capsuleCollider;
 
     protected EEnemyType enemyType = EEnemyType.None;
 
@@ -67,7 +68,6 @@ public class Enemy : MonoBehaviour
     {
         enemyType = EEnemyType.Medusa;
     }
-    
    
     protected void CheckEnemyType(EEnemyType type)
     {
@@ -95,4 +95,17 @@ public class Enemy : MonoBehaviour
         }
     }
 
+    public void OnDamaged()
+    {
+        spriteRenderer.color = new Color(1.0f, 1.0f, 1.0f, 0.5f);
+        spriteRenderer.flipY = true;
+        capsuleCollider.enabled = false;
+        rigid.AddForce(Vector2.up, ForceMode2D.Impulse);
+        Invoke("Dead", 3.0f);
+    }
+
+    void Dead()
+    {
+        Destroy(gameObject);
+    }
 }

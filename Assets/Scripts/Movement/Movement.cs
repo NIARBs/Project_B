@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
+using UnityEditor.UIElements;
 
 public class Movement : MonoBehaviour
 {
@@ -58,11 +59,13 @@ public class Movement : MonoBehaviour
     [Range(0, 1)]
     float fHorizontalDampingWhenTurning = 0.5f;
 
+    [SerializeField] float knockBackRange = 6.0f;
+    [SerializeField] float restTime = 2.0f;
+
     void Start()
     {
         m_Anim = this.transform.Find("model").GetComponent<Animator>();
         m_Anim.Play("Player_Idle");
-
         coll = GetComponent<Collision>();
         rb = GetComponent<Rigidbody2D>();
     }
@@ -323,5 +326,48 @@ public class Movement : MonoBehaviour
     void RigidbodyDrag(float x)
     {
         rb.drag = x;
+    }
+
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.tag == "Enemy")
+        {
+            Debug.Log(collision.transform.position.y);
+            if (rb.velocity.y < 0 && transform.position.y + 1 > collision.transform.position.y)
+            {
+                Debug.Log("들어오냐");
+                TargetAttack(collision.transform);
+            }
+            else
+            {
+                OnDamaged(collision.transform.position);
+            }
+        }
+    }
+
+    void OnDamaged(Vector2 targetPos)
+    {
+        // 10번째 레이어는 PlayerDamaged
+        gameObject.layer = 10;
+
+        int knockBackDir = transform.position.x - targetPos.x > 0 ? 1 : -1;
+        rb.AddForce(new Vector2(knockBackDir, 1) * knockBackRange, ForceMode2D.Impulse);
+
+        // TODO: 공격받은 애니메이션 추가
+
+        Invoke("OnRest", restTime);
+    }
+
+    void OnRest()
+    {
+        // 9번째 레이어는 Player
+        gameObject.layer = 9;
+    }
+
+    void TargetAttack(Transform enemy)
+    {
+        rb.AddForce(Vector2.up * 10, ForceMode2D.Impulse);
+        Enemy enemyObject = enemy.GetComponent<Enemy>();
+        enemyObject.OnDamaged();
     }
 }

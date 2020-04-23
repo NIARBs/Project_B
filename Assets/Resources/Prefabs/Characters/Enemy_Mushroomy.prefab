@@ -13,9 +13,9 @@ GameObject:
   - component: {fileID: 2647825647780987824}
   - component: {fileID: 6187116552997394895}
   - component: {fileID: 341839427}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Enemy_Mushroomy
-  m_TagString: Player
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
