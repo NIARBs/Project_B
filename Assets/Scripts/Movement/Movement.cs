@@ -62,7 +62,7 @@ public class Movement : MonoBehaviour
     {
         m_Anim = this.transform.Find("model").GetComponent<Animator>();
         m_Anim.Play("Player_Idle");
-        //m_Anim.Play("Player_Jump");
+
         coll = GetComponent<Collision>();
         rb = GetComponent<Rigidbody2D>();
     }
@@ -262,6 +262,9 @@ public class Movement : MonoBehaviour
         }
 
         m_Anim.SetFloat("Move", moveAbs);
+        m_Anim.SetBool("jump", true);
+        m_Anim.SetBool("sit", true);
+
 
         if (!canMove)
             return;
