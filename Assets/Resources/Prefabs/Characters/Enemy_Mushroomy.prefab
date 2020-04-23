@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 6187116552997394895}
   - component: {fileID: 341839427}
   m_Layer: 0
-  m_Name: Enemy_goomba
+  m_Name: Enemy_Mushroomy
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -53,6 +53,7 @@ SpriteRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -101,13 +102,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ff5489d1e2d30f4e9c0dce2c4fd50fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyType: 0
-  isAlive: 1
-  moveSpeed: 2
-  attackPoss: 1
-  attackDamage: 1
-  nextMove: 1
   player: {fileID: 0}
+  isAlive: 1
+  hp: 1
+  damage: 0
+  moveSpeed: 2
+  attackCycle: 0
+  nextMove: 1
+  nextFrontVec: {x: 0, y: 0, z: 0}
+  minNextMoveStateTime: 2
+  maxNextMoveStateTime: 5
 --- !u!50 &6187116552997394895
 Rigidbody2D:
   serializedVersion: 4
