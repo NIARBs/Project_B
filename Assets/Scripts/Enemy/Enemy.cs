@@ -29,26 +29,6 @@ public class Enemy : MonoBehaviour
     [SerializeField] protected float attackCycle;
     [SerializeField] protected int nextMove;
 
-    void Awake()
-    {
-    }
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        /*
-        Vector3 moveDir = player.transform.position - transform.position;
-        moveDir.Normalize();
-        transform.position += moveDir * moveSpeed * Time.deltaTime;
-        */
-    }
-
     void InitMushroomy()
     {
         enemyType = EEnemyType.Mushroomy;
@@ -107,5 +87,10 @@ public class Enemy : MonoBehaviour
     void Dead()
     {
         Destroy(gameObject);
+    }
+
+    public int GetDamage()
+    {
+        return damage;
     }
 }

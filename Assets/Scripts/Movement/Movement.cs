@@ -265,9 +265,7 @@ public class Movement : MonoBehaviour
         }
 
         m_Anim.SetFloat("Move", moveAbs);
-        m_Anim.SetBool("jump", true);
-        m_Anim.SetBool("sit", true);
-
+        //m_Anim.SetBool("sit", true);
 
         if (!canMove)
             return;
@@ -308,12 +306,18 @@ public class Movement : MonoBehaviour
         }
     }
 
-    private void Jump(Vector2 dir, bool wall)
+    private void Jump(Vector2 dir, bool isWall)
     {
-        m_Anim.Play("Player_Jump");
+        if(isWall)
+        {
+
+        }
+        else
+        {
+            m_Anim.SetBool("jump", true);
+        }
         rb.velocity = new Vector2(rb.velocity.x, 0);
         rb.velocity += dir * jumpForce;
-
     }
 
     IEnumerator DisableMovement(float time)
@@ -328,6 +332,18 @@ public class Movement : MonoBehaviour
         rb.drag = x;
     }
 
+    void OnTriggerEnter2D(Collider2D collision)
+    {
+        if(collision.gameObject.tag == "Item")
+        {
+            Destroy(collision.gameObject);
+        }
+        else if(collision.gameObject.tag == "Finish")
+        {
+            GameManager.GetInstance().NextStage();
+        }
+    }
+
     void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.tag == "Enemy")
@@ -335,22 +351,25 @@ public class Movement : MonoBehaviour
             Debug.Log(collision.transform.position.y);
             if (rb.velocity.y < 0 && transform.position.y + 1 > collision.transform.position.y)
             {
-                Debug.Log("들어오냐");
                 TargetAttack(collision.transform);
             }
             else
             {
-                OnDamaged(collision.transform.position);
+                OnDamaged(collision.transform);
             }
         }
     }
 
-    void OnDamaged(Vector2 targetPos)
+    void OnDamaged(Transform enemy)
     {
+        Enemy enemyObject = enemy.GetComponent<Enemy>();
+        int damage = enemyObject.GetDamage();
+        GameManager.GetInstance().DecreaseHP(damage);
+
         // 10번째 레이어는 PlayerDamaged
         gameObject.layer = 10;
 
-        int knockBackDir = transform.position.x - targetPos.x > 0 ? 1 : -1;
+        int knockBackDir = transform.position.x - enemy.transform.position.x > 0 ? 1 : -1;
         rb.AddForce(new Vector2(knockBackDir, 1) * knockBackRange, ForceMode2D.Impulse);
 
         // TODO: 공격받은 애니메이션 추가

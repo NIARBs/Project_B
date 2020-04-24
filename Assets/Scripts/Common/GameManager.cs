@@ -96,4 +96,9 @@ public class GameManager : MonoBehaviour
     {
         return curPanic;
     }
+    
+    public void NextStage()
+    {
+
+    }
 }
