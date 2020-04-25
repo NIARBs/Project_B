@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class DoorGate : MonoBehaviour
 {
+    [Header ("- 오브젝트 설정")][Tooltip ("문 오브젝트를 넣어주세요.")]
     [SerializeField] GameObject door;
 
     void OnTriggerEnter2D(Collider2D collision)

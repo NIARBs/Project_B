@@ -9,6 +9,7 @@ TagManager:
   - MoveBlock
   - Item
   - Door
+  - Enemy
   layers:
   - Default
   - TransparentFX
@@ -20,8 +21,8 @@ TagManager:
   - 
   - Ground
   - Player
-  - 
-  - 
+  - PlayerDamaged
+  - Enemy
   - 
   - 
   - 
