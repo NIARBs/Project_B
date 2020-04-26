@@ -22,7 +22,8 @@ public class Enemy_Mushroomy : Enemy
     {
         CheckEnemyType(EEnemyType.Mushroomy);
 
-        StartCoroutine("StartEnemyAI");
+        //StartCoroutine("StartEnemyAI");
+        nextMove = -1;
     }
 
     void FixedUpdate()
@@ -63,8 +64,9 @@ public class Enemy_Mushroomy : Enemy
 
         spriteRenderer.flipX = nextMove == 1;
 
-        StopCoroutine("StartEnemyAI");
-        StartCoroutine("StartEnemyAI");
+        NextFrontVec();
+        //StopCoroutine("StartEnemyAI");
+        //StartCoroutine("StartEnemyAI");
     }
 
     IEnumerator StartEnemyAI()
