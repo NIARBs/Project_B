@@ -13,7 +13,7 @@ public class Movement : MonoBehaviour
     [HideInInspector]
     public Rigidbody2D rb;
 
-    public GameObject playerBody;
+    public GameObject playerBone;
 
     [Space]
     [Header("Stats")]
@@ -64,7 +64,7 @@ public class Movement : MonoBehaviour
 
     void Start()
     {
-        m_Anim = this.transform.Find("model").GetComponent<Animator>();
+        m_Anim = this.transform.GetComponent<Animator>();
         m_Anim.Play("Player_Idle");
         coll = GetComponent<Collision>();
         rb = GetComponent<Rigidbody2D>();
@@ -85,12 +85,14 @@ public class Movement : MonoBehaviour
         {
             wallGrab = true;
             wallSlide = false;
+            m_Anim.SetBool("WallGrab", false);
         }
 
         if (Input.GetButtonUp("Fire3") || !coll.onWall || !canMove)
         {
             wallGrab = false;
             wallSlide = false;
+            m_Anim.SetBool("WallGrab", false);
         }
 
         if (coll.onGround && !isDashing)
@@ -119,12 +121,16 @@ public class Movement : MonoBehaviour
             if (x != 0 && !wallGrab)
             {
                 wallSlide = true;
+                m_Anim.SetBool("WallGrab", true);
                 WallSlide();
             }
         }
 
         if (!coll.onWall || coll.onGround)
+        {
             wallSlide = false;
+            m_Anim.SetBool("WallGrab", false);
+        }
 
         if (Input.GetButtonDown("Jump"))
         {
@@ -168,6 +174,8 @@ public class Movement : MonoBehaviour
     {
         hasDashed = false;
         isDashing = false;
+        m_Anim.SetBool("Jump", false);
+        m_Anim.SetBool("WallGrab", false);
     }
 
 
@@ -256,12 +264,12 @@ public class Movement : MonoBehaviour
         }
         else
         {
-            if (playerBody.transform.localScale.x == moveAxis)
+            if (playerBone.transform.localScale.x == moveAxis)
             {
                 accAccleration = 0;
             }
 
-            playerBody.transform.localScale = new Vector3(-1 * moveAxis, 1, 1);
+            playerBone.transform.localScale = new Vector3(-1 * moveAxis, 1, 1);
         }
 
         m_Anim.SetFloat("Move", moveAbs);
@@ -310,11 +318,10 @@ public class Movement : MonoBehaviour
     {
         if(isWall)
         {
-
         }
         else
         {
-            m_Anim.SetBool("jump", true);
+            m_Anim.SetBool("Jump", true);
         }
         rb.velocity = new Vector2(rb.velocity.x, 0);
         rb.velocity += dir * jumpForce;
