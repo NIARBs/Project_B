@@ -20,9 +20,11 @@ public class Movement : MonoBehaviour
     public float speed = 10;
     public float acceleration = 20;
     public float jumpForce = 50;
+    public float wallJumpForce = 50;
     public float slideSpeed = 5;
     public float wallJumpLerp = 10;
     public float dashSpeed = 20;
+    public Vector2 wallJumpDir;
 
     [Space]
     [Header("Booleans")]
@@ -229,9 +231,9 @@ public class Movement : MonoBehaviour
         StopCoroutine(DisableMovement(0));
         StartCoroutine(DisableMovement(.1f));
 
-        Vector2 wallDir = coll.onRightWall ? Vector2.left : Vector2.right;
+        Vector2 wallDir = coll.onRightWall ? new Vector2(-wallJumpDir.x, wallJumpDir.y) : wallJumpDir;
 
-        Jump((Vector2.up / 1.5f + wallDir / 1.5f), true);
+        Jump(wallDir, true);
 
         wallJumped = true;
     }
@@ -315,15 +317,20 @@ public class Movement : MonoBehaviour
 
     private void Jump(Vector2 dir, bool isWall)
     {
+        dir.Normalize();
+
         if(isWall)
         {
+            rb.velocity = new Vector2(rb.velocity.x, 0);
+            rb.velocity += dir * wallJumpForce;
         }
         else
         {
             m_Anim.SetBool("Jump", true);
+            rb.velocity = new Vector2(rb.velocity.x, 0);
+            rb.velocity += dir * jumpForce;
         }
-        rb.velocity = new Vector2(rb.velocity.x, 0);
-        rb.velocity += dir * jumpForce;
+        
     }
 
     IEnumerator DisableMovement(float time)

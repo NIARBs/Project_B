@@ -59,13 +59,14 @@ public class Player : MonoBehaviour
     private bool _canWallJump = true;
 
     StateMachine _stateMachine;
+    Animator _anim;
 
     private void Awake()
     {
         _stateMachine = gameObject.AddComponent<StateMachine>();
 
         _stateMachine.SetCallback(IDLE, StIdle, StIdleBegin, null);
-        _stateMachine.SetCallback(WALK, StWalk, null, null);
+        _stateMachine.SetCallback(WALK, StWalk, StWalkBegin, null);
         _stateMachine.SetCallback(JUMP, StJump, StJumpBegin, null);
         _stateMachine.SetCallback(ROLL, StRoll, StRollBegin, StRollEnd);
         _stateMachine.SetCallback(CROUCH, StCrouch, StCrouchBegin, StCrouchEnd);
@@ -81,8 +82,11 @@ public class Player : MonoBehaviour
     void Start()
     {
         _rigid = GetComponent<Rigidbody2D>();
+        _anim = GetComponent<Animator>();
         _scale = transform.localScale;
         _gravity = _rigid.gravityScale;
+
+        _anim.Play("Player_Idle");
     }
 
     // Update is called once per frame
@@ -219,6 +223,14 @@ public class Player : MonoBehaviour
             _rigid.velocity = new Vector2(0, _rigid.velocity.y);
 
         return IDLE;
+    }
+
+    private void StWalkBegin()
+    {
+        float moveAxis = Input.GetAxisRaw("Horizontal");
+        float moveAbs = Mathf.Abs(moveAxis);
+
+        _anim.SetFloat("Move", moveAbs);
     }
 
     int StWalk()
