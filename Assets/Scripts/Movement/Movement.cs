@@ -13,7 +13,7 @@ public class Movement : MonoBehaviour
     [HideInInspector]
     public Rigidbody2D rb;
 
-    public GameObject playerBone;
+    public GameObject player;
 
     [Space]
     [Header("Stats")]
@@ -64,8 +64,7 @@ public class Movement : MonoBehaviour
 
     void Start()
     {
-        m_Anim = this.transform.GetComponent<Animator>();
-        m_Anim.Play("Player_Idle");
+        m_Anim = player.transform.GetComponent<Animator>();
         coll = GetComponent<Collision>();
         rb = GetComponent<Rigidbody2D>();
     }
@@ -264,12 +263,12 @@ public class Movement : MonoBehaviour
         }
         else
         {
-            if (playerBone.transform.localScale.x == moveAxis)
+            if (player.transform.localScale.x == moveAxis)
             {
                 accAccleration = 0;
             }
 
-            playerBone.transform.localScale = new Vector3(-1 * moveAxis, 1, 1);
+            player.transform.localScale = new Vector3(-1 * moveAxis, 1, 1);
         }
 
         m_Anim.SetFloat("Move", moveAbs);

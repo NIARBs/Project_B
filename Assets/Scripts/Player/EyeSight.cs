@@ -14,14 +14,14 @@ public class EyeSight : MonoBehaviour
         public float downLeftAngle;
     }
 
-    [Header ("- 오브젝트 설정")][Tooltip ("플레이어 캐릭터 오브젝트를 넣습니다.")]
-    [SerializeField] GameObject player;
+    [Header ("- 오브젝트 설정")]
     [Tooltip ("플레이어의 시야 오브젝트를 넣습니다.")]
     [SerializeField] GameObject eyeSight;
-    [Tooltip ("플레이어의 머리부분 오브젝트를 넣습니다. Bone이 있을 경우, 머리에 해당되는 Bone을 넣습니다.")]
-    [SerializeField] GameObject head;
+    [Tooltip ("플레이어의 머리부분 오브젝트를 넣습니다. Bone이 있을 경우, 머리에 해당되는 Bone을 넣습니다. (눈동자 움직임이 있어야 하는 경우 Head Bone 자식으로 설정)")]
+    [SerializeField] GameObject headBone;
 
-    [Header ("- 마우스 트래킹 설정")][Tooltip ("플레이어 캐릭터가 마우스를 쳐다볼 것인지 설정합니다.")]
+    [Header ("- 마우스 트래킹 설정")]
+    [Tooltip ("플레이어 캐릭터가 마우스를 쳐다볼 것인지 설정합니다.")]
     [SerializeField] bool isTracking = true;
     [Tooltip ("플레이어 캐릭터가 마우스를 쳐다보는 각도를 제한합니다. 캐릭터를 기준으로 < 위(0도)와 아래(180도) +- limitEyeSightRange / 2 >")]
     [SerializeField] float limitEyeSightRange = 50.0f;
@@ -29,7 +29,7 @@ public class EyeSight : MonoBehaviour
     [Header ("- 플레이어, 시야 동기화")][Tooltip ("게임이 시작될 때 플레이어 캐릭터가 바라보는 방향을 설정합니다.")]
     [SerializeField] bool isRightFront = true;
 
-    private bool isHeadFlip = false;
+    public bool isHeadFlip = false;
 
     private LimitAngle eyeLimitAngle;
     private LimitAngle headLimitAngle;
@@ -105,7 +105,7 @@ public class EyeSight : MonoBehaviour
             float distance;
             xy.Raycast(ray, out distance);
             mousePos = ray.GetPoint(distance);
-            playerPos = player.transform.position;
+            playerPos = this.transform.position;
 
             TrackingMouse();
             SetPlayerHeadFront();
@@ -123,9 +123,15 @@ public class EyeSight : MonoBehaviour
         float convertToEyeAngle = ConvertToAngle(unityEyeAngle);
         float convertToHeadAngle = ConvertToHeadAngle(unityHeadAngle + (isRightFront ? 180 : 0));
 
-        //head.transform.LookAt(mousePos);
-        //Debug.Log((mousePos - playerPos).normalized);
-        head.transform.localEulerAngles = new Vector3(0, 0, convertToHeadAngle);
+        for(int idx = 0; idx < headBone.transform.childCount; ++idx)
+        {
+            Transform eyeBone = headBone.transform.GetChild(idx);
+            if (eyeBone == null || eyeBone.gameObject.activeInHierarchy == false)
+                continue;
+
+            eyeBone.localEulerAngles = new Vector3(0, 0, convertToEyeAngle - 90);
+        }
+        headBone.transform.localEulerAngles = new Vector3(0, 0, isRightFront ? - (convertToHeadAngle * 0.15f) : convertToHeadAngle * 0.15f);
         eyeSight.transform.localEulerAngles = new Vector3(0, 0, convertToEyeAngle - 90);
     }
 
@@ -190,23 +196,33 @@ public class EyeSight : MonoBehaviour
         if(isRightFront && mousePos.x < playerPos.x)
         {
             isRightFront = false;
-            head.transform.localScale = new Vector3(head.transform.localScale.x, -head.transform.localScale.y, 1);
+            TurnHead();
         }
         else if(!isRightFront && mousePos.x > playerPos.x)
         {
             isRightFront = true;
-            head.transform.localScale = new Vector3(head.transform.localScale.x, -head.transform.localScale.y, 1);
+            TurnHead();
         }
 
         if(Input.GetKey(KeyCode.A) && isHeadFlip)
         {
             InverseHeadFlip();
-            head.transform.localScale = new Vector3(head.transform.localScale.x, -head.transform.localScale.y, 1);
+            TurnHead();
         }
         else if(Input.GetKey(KeyCode.D) && !isHeadFlip)
         {
             InverseHeadFlip();
-            head.transform.localScale = new Vector3(head.transform.localScale.x, -head.transform.localScale.y, 1);
+            TurnHead();
+        }
+    }
+
+    void TurnHead()
+    {
+        //headBone.transform.localScale = new Vector3(headBone.transform.localScale.x, -headBone.transform.localScale.y, 1);
+        Transform neckBone = headBone.transform.parent;
+        if (neckBone.gameObject.activeInHierarchy)
+        {
+            neckBone.transform.localScale = new Vector3(neckBone.transform.localScale.x, -neckBone.transform.localScale.y, 1);
         }
     }
 
