@@ -63,19 +63,19 @@ public class Player : MonoBehaviour
 
     private void Awake()
     {
-        _stateMachine = gameObject.AddComponent<StateMachine>();
+        _stateMachine = new StateMachine();
 
-        _stateMachine.SetCallback(IDLE, StIdle, StIdleBegin, null);
-        _stateMachine.SetCallback(WALK, StWalk, StWalkBegin, null);
-        _stateMachine.SetCallback(JUMP, StJump, StJumpBegin, null);
-        _stateMachine.SetCallback(ROLL, StRoll, StRollBegin, StRollEnd);
-        _stateMachine.SetCallback(CROUCH, StCrouch, StCrouchBegin, StCrouchEnd);
-        _stateMachine.SetCallback(CLIMB, StClimbUpdate, StClimbBegin, StclimbEnd);
+        //_stateMachine.SetCallback(IDLE, StIdle, StIdleBegin, null);
+        //_stateMachine.SetCallback(WALK, StWalk, StWalkBegin, null);
+        //_stateMachine.SetCallback(JUMP, StJump, StJumpBegin, null);
+        //_stateMachine.SetCallback(ROLL, StRoll, StRollBegin, StRollEnd);
+        //_stateMachine.SetCallback(CROUCH, StCrouch, StCrouchBegin, StCrouchEnd);
+        //_stateMachine.SetCallback(CLIMB, StClimbUpdate, StClimbBegin, StclimbEnd);
 
-        _stateMachine.SetGlobalCallback(PANIC_LV0, GstPanicLv0, null, null);
-        _stateMachine.SetGlobalCallback(PANIC_LV1, GstPanicLv1, GstPanicLv1Begin, null);
-        _stateMachine.SetGlobalCallback(PANIC_LV2, GstPanicLv2, GstPanicLv2Begin, null);
-        _stateMachine.SetGlobalCallback(PANIC_LV3, GstPanicLv3, GstPanicLv3Begin, null);
+        //_stateMachine.SetGlobalCallback(PANIC_LV0, GstPanicLv0, null, null);
+        //_stateMachine.SetGlobalCallback(PANIC_LV1, GstPanicLv1, GstPanicLv1Begin, null);
+        //_stateMachine.SetGlobalCallback(PANIC_LV2, GstPanicLv2, GstPanicLv2Begin, null);
+        //_stateMachine.SetGlobalCallback(PANIC_LV3, GstPanicLv3, GstPanicLv3Begin, null);
     }
 
     // Start is called before the first frame update

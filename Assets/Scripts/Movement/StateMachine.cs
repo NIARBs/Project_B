@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public delegate int stUpdate();
+public delegate void stUpdate();
 public delegate void stBegin();
 public delegate void stEnd();
 public delegate IEnumerator stCoroutine();
@@ -24,7 +24,7 @@ class StateValue
 }
 
 
-public class StateMachine : MonoBehaviour
+public class StateMachine
 {
     Dictionary<int, StateValue> dicState = new Dictionary<int, StateValue> { };
     Dictionary<int, StateValue> dicGlobalState = new Dictionary<int, StateValue> { };
@@ -36,26 +36,7 @@ public class StateMachine : MonoBehaviour
 
     public void Update()
     {
-        int globalRet = dicGlobalState[globalState].update.Invoke();
-        int ret = curState;
-        if (Stop == false)
-        {
-            ret = dicState[curState].update.Invoke();
-        }
-        
-        if (curState != ret)
-        {
-            dicState[curState].end?.Invoke();
-            curState = ret;
-            dicState[curState].begin?.Invoke();
-        }
-
-        if(globalRet != globalState)
-        {
-            dicGlobalState[globalState].end?.Invoke();
-            globalState = globalRet;
-            dicGlobalState[globalState].begin?.Invoke();
-        }
+        dicState[curState].update.Invoke();
     }
 
     public void SetCallback(int type_, stUpdate update_, stBegin begin_, stEnd end_)

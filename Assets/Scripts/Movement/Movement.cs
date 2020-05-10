@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 using UnityEditor.UIElements;
+using System.Security.Cryptography;
 
 public class Movement : MonoBehaviour
 {
     protected Animator m_Anim;
+    private StateMachine m_FSM;
 
     private Collision coll;
     [HideInInspector]
@@ -21,9 +23,11 @@ public class Movement : MonoBehaviour
     public float acceleration = 20;
     public float jumpForce = 50;
     public float wallJumpForce = 50;
+    public float wallJumpControllSpeed = 30;
     public float slideSpeed = 5;
     public float wallJumpLerp = 10;
     public float dashSpeed = 20;
+    
     public Vector2 wallJumpDir;
 
     [Space]
@@ -64,37 +68,50 @@ public class Movement : MonoBehaviour
     [SerializeField] float knockBackRange = 6.0f;
     [SerializeField] float restTime = 2.0f;
 
+    private float accAccleration = 0;
+
+    #region state
+    private const int IDLE = 0;
+    private const int WALK = 1;
+    private const int JUMP = 2;
+    private const int JUMP_SECOND = 3;
+    private const int WALL_GRAB = 5;
+    private const int WALL_JUMP = 6;
+
+    #endregion
+
+    private void Awake()
+    {
+        m_FSM = new StateMachine();
+
+        m_FSM.SetCallback(IDLE, stIdle, stIdleBegin, null);
+        m_FSM.SetCallback(WALK, stWalk, stWalkBegin, null);
+        m_FSM.SetCallback(JUMP, stJump, stJumpBegin, null);
+        m_FSM.SetCallback(WALL_GRAB, stWallGrab, stWallGrabBegin, stWallGrabEnd);
+        m_FSM.SetCallback(WALL_JUMP, stWallJump, stWallJumpBegin, null);
+        m_FSM.SetCallback(JUMP_SECOND, stJumpSecond, stJumpBegin, null);
+    }
+
     void Start()
     {
         m_Anim = player.transform.GetComponent<Animator>();
         coll = GetComponent<Collision>();
         rb = GetComponent<Rigidbody2D>();
+
+        m_FSM.changeState(IDLE);
     }
 
     // Update is called once per frame
     void Update()
     {
+        m_FSM.Update();
+
         float x = Input.GetAxis("Horizontal");
         float y = Input.GetAxis("Vertical");
         float xRaw = Input.GetAxisRaw("Horizontal");
         float yRaw = Input.GetAxisRaw("Vertical");
         Vector2 dir = new Vector2(x, y);
 
-        Walk(dir);
-
-        if(coll.onWall && Input.GetButton("Fire3") && canMove)
-        {
-            wallGrab = true;
-            wallSlide = false;
-            m_Anim.SetBool("WallGrab", false);
-        }
-
-        if (Input.GetButtonUp("Fire3") || !coll.onWall || !canMove)
-        {
-            wallGrab = false;
-            wallSlide = false;
-            m_Anim.SetBool("WallGrab", false);
-        }
 
         if (coll.onGround && !isDashing)
         {
@@ -117,35 +134,6 @@ public class Movement : MonoBehaviour
             rb.gravityScale = 3;
         }
 
-        if (coll.onWall && !coll.onGround)
-        {
-            if (x != 0 && !wallGrab)
-            {
-                wallSlide = true;
-                m_Anim.SetBool("WallGrab", true);
-                WallSlide();
-            }
-        }
-
-        if (!coll.onWall || coll.onGround)
-        {
-            wallSlide = false;
-            m_Anim.SetBool("WallGrab", false);
-        }
-
-        if (Input.GetButtonDown("Jump"))
-        {
-            if (coll.onGround)
-                Jump(Vector2.up, false);
-            if (coll.onWall && !coll.onGround)
-                WallJump();
-        }
-
-        if (Input.GetButtonDown("Fire1") && !hasDashed)
-        {
-            if (xRaw != 0 || yRaw != 0)
-                Dash(xRaw, yRaw);
-        }
 
         if (coll.onGround && !groundTouch)
         {
@@ -171,91 +159,192 @@ public class Movement : MonoBehaviour
         }
     }
 
-    void GroundTouch()
+    private void stIdleBegin()
     {
-        hasDashed = false;
-        isDashing = false;
-        m_Anim.SetBool("Jump", false);
-        m_Anim.SetBool("WallGrab", false);
-    }
+        Debug.Log("IDLE_BEGIN");
+        m_Anim.Play("Player_Idle");
+        m_Anim.SetFloat("Move", 0);
 
-
-    private void Dash(float x, float y)
-    {
-        Camera.main.transform.DOComplete();
-        Camera.main.transform.DOShakePosition(.2f, .5f, 14, 90, false, true);
-
-        hasDashed = true;
-
-        rb.velocity = Vector2.zero;
-        Vector2 dir = new Vector2(x, y);
-
-        rb.velocity += dir.normalized * dashSpeed;
-        StartCoroutine(DashWait());
-    }
-
-    IEnumerator DashWait()
-    {
-        StartCoroutine(GroundDash());
-        DOVirtual.Float(14, 0, .8f, RigidbodyDrag);
-
-        //dashParticle.Play();
-        rb.gravityScale = 0;
-        GetComponent<BetterJumping>().enabled = false;
-        wallJumped = true;
-        isDashing = true;
-
-        yield return new WaitForSeconds(.3f);
-
-        //dashParticle.Stop();
-        rb.gravityScale = 3;
-        GetComponent<BetterJumping>().enabled = true;
         wallJumped = false;
-        isDashing = false;
+        GetComponent<BetterJumping>().enabled = true;
     }
 
-    IEnumerator GroundDash()
+    private void stIdle()
     {
-        yield return new WaitForSeconds(.15f);
-        if (coll.onGround)
-            hasDashed = false;
-    }
-
-    private void WallJump()
-    {
-        if ((side == 1 && coll.onRightWall) || side == -1 && !coll.onRightWall)
+        float moveAxis = Input.GetAxisRaw("Horizontal");
+        if (moveAxis != 0)
         {
-            side *= -1;
+            m_FSM.changeState(WALK);
         }
 
-        StopCoroutine(DisableMovement(0));
-        StartCoroutine(DisableMovement(.1f));
-
-        Vector2 wallDir = coll.onRightWall ? new Vector2(-wallJumpDir.x, wallJumpDir.y) : wallJumpDir;
-
-        Jump(wallDir, true);
-
-        wallJumped = true;
+        if (Input.GetButtonDown("Jump"))
+        {
+            m_FSM.changeState(JUMP);
+        }
     }
 
-    private void WallSlide()
+    private void stWalkBegin()
     {
-        if (!canMove)
+        float moveAxis = Input.GetAxisRaw("Horizontal");
+        float moveAbs = Mathf.Abs(moveAxis);
+
+        m_Anim.SetFloat("Move", moveAbs);
+    }
+
+    private void stWalk()
+    {
+        float moveAxis = Input.GetAxisRaw("Horizontal");
+        float moveAbs = Mathf.Abs(moveAxis);
+
+        if (moveAxis == 0)
+        {
+            m_FSM.changeState(IDLE);
             return;
-
-        bool pushingWall = false;
-        if ((rb.velocity.x > 0 && coll.onRightWall) || (rb.velocity.x < 0 && coll.onLeftWall))
-        {
-            pushingWall = true;
         }
-        float push = pushingWall ? 0 : rb.velocity.x;
 
-        rb.velocity = new Vector2(push, -slideSpeed);
+        if (Input.GetButtonDown("Jump"))
+        {
+            m_FSM.changeState(JUMP);
+            return;
+        }
+
+        if ((coll.onLeftWall && moveAxis < 0) || (coll.onRightWall && moveAxis > 0))
+        {
+            return;
+        }
+
+        if (moveAxis == 0)
+        {
+            accAccleration = 0;
+        }
+        else
+        {
+            if (player.transform.localScale.x == moveAxis)
+            {
+                accAccleration = 0;
+            }
+
+            player.transform.localScale = new Vector3(-1 * moveAxis, 1, 1);
+        }
+
+        accAccleration += moveAxis * acceleration * Time.deltaTime;
+
+        float fHorizontalVelocity = rb.velocity.x;
+        fHorizontalVelocity += accAccleration;
+
+        if (moveAbs < 0.01f)
+            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingWhenStopping, Time.deltaTime * 10f);
+        else if (Mathf.Sign(moveAxis) != Mathf.Sign(fHorizontalVelocity))
+            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingWhenTurning, Time.deltaTime * 10f);
+        else
+            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingBasic, Time.deltaTime * 10f);
+
+        if (fHorizontalVelocity >= speed)
+        {
+            fHorizontalVelocity = speed;
+        }
+        else if (fHorizontalVelocity <= -speed)
+        {
+            fHorizontalVelocity = -speed;
+        }
+
+        rb.velocity = new Vector2(fHorizontalVelocity, rb.velocity.y);
+
+        
+
     }
 
-    private float accAccleration = 0;
-    private void Walk(Vector2 dir)
+    void stJumpBegin()
     {
+        m_Anim.SetBool("Jump", true);
+
+        rb.velocity = new Vector2(rb.velocity.x, 0);
+        rb.velocity += Vector2.up * jumpForce;
+
+        coll.onGround = false;
+    }
+
+    void stJump()
+    {
+        if (true == coll.onGround)
+        {
+            m_FSM.changeState(IDLE);
+            return;
+        }
+
+        if (coll.onWall && rb.velocity.y < 0)
+        {
+            m_FSM.changeState(WALL_GRAB);
+            return;
+        }
+
+        if(rb.velocity.y > 0 && Input.GetButtonDown("Jump"))
+        {
+            m_FSM.changeState(JUMP_SECOND);
+            return;
+        }
+
+        float moveAxis = Input.GetAxisRaw("Horizontal");
+        float moveAbs = Mathf.Abs(moveAxis);
+
+        if ((coll.onLeftWall && moveAxis < 0) || (coll.onRightWall && moveAxis > 0))
+        {
+            return;
+        }
+
+        if (moveAxis == 0)
+        {
+            accAccleration = 0;
+        }
+        else
+        {
+            if (player.transform.localScale.x == moveAxis)
+            {
+                accAccleration = 0;
+            }
+
+            player.transform.localScale = new Vector3(-1 * moveAxis, 1, 1);
+        }
+
+        accAccleration += moveAxis * acceleration * Time.deltaTime;
+
+        float fHorizontalVelocity = rb.velocity.x;
+        fHorizontalVelocity += accAccleration;
+
+        if (moveAbs < 0.01f)
+            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingWhenStopping, Time.deltaTime * 10f);
+        else if (Mathf.Sign(moveAxis) != Mathf.Sign(fHorizontalVelocity))
+            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingWhenTurning, Time.deltaTime * 10f);
+        else
+            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingBasic, Time.deltaTime * 10f);
+
+        if (fHorizontalVelocity >= speed)
+        {
+            fHorizontalVelocity = speed;
+        }
+        else if (fHorizontalVelocity <= -speed)
+        {
+            fHorizontalVelocity = -speed;
+        }
+
+        rb.velocity = new Vector2(fHorizontalVelocity, rb.velocity.y);
+
+    }
+
+    void stJumpSecond()
+    {
+        if (true == coll.onGround)
+        {
+            m_FSM.changeState(IDLE);
+            return;
+        }
+
+        if (coll.onWall && rb.velocity.y < 0)
+        {
+            m_FSM.changeState(WALL_GRAB);
+            return;
+        }
+
         float moveAxis = Input.GetAxisRaw("Horizontal");
         float moveAbs = Mathf.Abs(moveAxis);
 
@@ -273,76 +362,102 @@ public class Movement : MonoBehaviour
             player.transform.localScale = new Vector3(-1 * moveAxis, 1, 1);
         }
 
-        m_Anim.SetFloat("Move", moveAbs);
-        //m_Anim.SetBool("sit", true);
+        accAccleration += moveAxis * acceleration * Time.deltaTime;
 
-        if (!canMove)
-            return;
+        float fHorizontalVelocity = rb.velocity.x;
+        fHorizontalVelocity += accAccleration;
 
-        if (wallGrab)
-            return;
-
-        if (!wallJumped)
-        {
-            accAccleration += moveAxis * acceleration * Time.deltaTime;
-
-            float fHorizontalVelocity = rb.velocity.x;
-            fHorizontalVelocity += accAccleration;
-
-            if (moveAbs < 0.01f)
-                fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingWhenStopping, Time.deltaTime * 10f);
-            else if (Mathf.Sign(moveAxis) != Mathf.Sign(fHorizontalVelocity))
-                fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingWhenTurning, Time.deltaTime * 10f);
-            else
-                fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingBasic, Time.deltaTime * 10f);
-
-            if(fHorizontalVelocity >= speed)
-            {
-                fHorizontalVelocity = speed;
-            }
-            else if(fHorizontalVelocity <= -speed)
-            {
-                fHorizontalVelocity = -speed;
-            }
-
-
-            rb.velocity = new Vector2(fHorizontalVelocity, rb.velocity.y);
-            //rb.velocity = new Vector2(dir.x * speed, rb.velocity.y);
-        }
+        if (moveAbs < 0.01f)
+            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingWhenStopping, Time.deltaTime * 10f);
+        else if (Mathf.Sign(moveAxis) != Mathf.Sign(fHorizontalVelocity))
+            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingWhenTurning, Time.deltaTime * 10f);
         else
+            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingBasic, Time.deltaTime * 10f);
+
+        if (fHorizontalVelocity >= speed)
         {
-            //rb.velocity = Vector2.Lerp(rb.velocity, (new Vector2(dir.x * speed, rb.velocity.y)), wallJumpLerp * Time.deltaTime);
+            fHorizontalVelocity = speed;
         }
+        else if (fHorizontalVelocity <= -speed)
+        {
+            fHorizontalVelocity = -speed;
+        }
+
+        rb.velocity = new Vector2(fHorizontalVelocity, rb.velocity.y);
     }
 
-    private void Jump(Vector2 dir, bool isWall)
+    void stWallGrabBegin()
     {
-        dir.Normalize();
+        m_Anim.SetBool("WallGrab", true);
+    }
 
-        if(isWall)
+    void stWallGrab()
+    {
+        if (true == coll.onGround)
         {
-            rb.velocity = new Vector2(rb.velocity.x, 0);
-            rb.velocity += dir * wallJumpForce;
+            m_FSM.changeState(IDLE);
+            return;
         }
-        else
+
+        if(Input.GetButtonDown("Jump"))
         {
-            m_Anim.SetBool("Jump", true);
-            rb.velocity = new Vector2(rb.velocity.x, 0);
-            rb.velocity += dir * jumpForce;
+            m_FSM.changeState(WALL_JUMP);
+            return;
         }
+
+        bool pushingWall = false;
+        if ((rb.velocity.x > 0 && coll.onRightWall) || (rb.velocity.x < 0 && coll.onLeftWall))
+        {
+            pushingWall = true;
+        }
+         float push = pushingWall ? 0 : rb.velocity.x;
+
+        rb.velocity = new Vector2(push, -slideSpeed);
+    }
+
+    void stWallGrabEnd()
+    {
+        m_Anim.SetBool("WallGrab", false);
+    }
+
+    void stWallJumpBegin()
+    {
+        m_Anim.SetBool("Jump", true);
+
+        Vector2 wallDir = coll.onRightWall ? new Vector2(-wallJumpDir.x, wallJumpDir.y) : wallJumpDir;
+
+        rb.velocity = new Vector2(0, 0);
+        rb.velocity += wallDir.normalized * wallJumpForce;
+    }
+
+    void stWallJump()
+    {
+        if (true == coll.onGround)
+        {
+            m_FSM.changeState(IDLE);
+            return;
+        }
+
+        if (coll.onWall && rb.velocity.y < 0)
+        {
+            m_FSM.changeState(WALL_GRAB);
+            return;
+        }
+
+        float moveAxis = Input.GetAxisRaw("Horizontal");
+        player.transform.localScale = new Vector3(-1 * moveAxis, 1, 1);
+
+        rb.velocity = new Vector2(rb.velocity.x + moveAxis * wallJumpControllSpeed * Time.deltaTime, rb.velocity.y);
         
+
     }
 
-    IEnumerator DisableMovement(float time)
+    void GroundTouch()
     {
-        canMove = false;
-        yield return new WaitForSeconds(time);
-        canMove = true;
-    }
-
-    void RigidbodyDrag(float x)
-    {
-        rb.drag = x;
+        hasDashed = false;
+        isDashing = false;
+        m_Anim.SetBool("Jump", false);
+        m_Anim.SetBool("WallGrab", false);
     }
 
     void OnTriggerEnter2D(Collider2D collision)
@@ -361,7 +476,6 @@ public class Movement : MonoBehaviour
     {
         if (collision.gameObject.tag == "Enemy")
         {
-            Debug.Log(collision.transform.position.y);
             if (rb.velocity.y < 0 && transform.position.y + 1 > collision.transform.position.y)
             {
                 TargetAttack(collision.transform);
