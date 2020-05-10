@@ -85,10 +85,10 @@ public class Movement : MonoBehaviour
         m_FSM = new StateMachine();
 
         m_FSM.SetCallback(IDLE, stIdle, stIdleBegin, null);
-        m_FSM.SetCallback(WALK, stWalk, stWalkBegin, null);
-        m_FSM.SetCallback(JUMP, stJump, stJumpBegin, null);
+        m_FSM.SetCallback(WALK, stWalk, stWalkBegin, stWalkEnd);
+        m_FSM.SetCallback(JUMP, stJump, stJumpBegin, stJumpEnd);
         m_FSM.SetCallback(WALL_GRAB, stWallGrab, stWallGrabBegin, stWallGrabEnd);
-        m_FSM.SetCallback(WALL_JUMP, stWallJump, stWallJumpBegin, null);
+        m_FSM.SetCallback(WALL_JUMP, stWallJump, stWallJumpBegin, stWallJumpEnd);
         m_FSM.SetCallback(JUMP_SECOND, stJumpSecond, stJumpBegin, null);
     }
 
@@ -135,28 +135,16 @@ public class Movement : MonoBehaviour
         }
 
 
-        if (coll.onGround && !groundTouch)
-        {
-            GroundTouch();
-            groundTouch = true;
-        }
+        //if (coll.onGround && !groundTouch)
+        //{
+        //    GroundTouch();
+        //    groundTouch = true;
+        //}
 
-        if (!coll.onGround && groundTouch)
-        {
-            groundTouch = false;
-        }
-
-        if (wallGrab || wallSlide || !canMove)
-            return;
-
-        if (x > 0)
-        {
-            side = 1;
-        }
-        if (x < 0)
-        {
-            side = -1;
-        }
+        //if (!coll.onGround && groundTouch)
+        //{
+        //    groundTouch = false;
+        //}
     }
 
     private void stIdleBegin()
@@ -185,6 +173,10 @@ public class Movement : MonoBehaviour
 
     private void stWalkBegin()
     {
+        Debug.Log("Walk Begin velocity : " + rb.velocity.x);
+
+        accAccleration = 0;
+
         float moveAxis = Input.GetAxisRaw("Horizontal");
         float moveAbs = Mathf.Abs(moveAxis);
 
@@ -229,6 +221,7 @@ public class Movement : MonoBehaviour
 
         accAccleration += moveAxis * acceleration * Time.deltaTime;
 
+        Debug.Log("Walk velocity : " + rb.velocity.x);
         float fHorizontalVelocity = rb.velocity.x;
         fHorizontalVelocity += accAccleration;
 
@@ -250,8 +243,11 @@ public class Movement : MonoBehaviour
 
         rb.velocity = new Vector2(fHorizontalVelocity, rb.velocity.y);
 
-        
+    }
 
+    void stWalkEnd()
+    {
+        m_Anim.SetFloat("Move", 0);
     }
 
     void stJumpBegin()
@@ -278,11 +274,11 @@ public class Movement : MonoBehaviour
             return;
         }
 
-        if(rb.velocity.y > 0 && Input.GetButtonDown("Jump"))
-        {
-            m_FSM.changeState(JUMP_SECOND);
-            return;
-        }
+        //if(rb.velocity.y > 0 && Input.GetButtonDown("Jump"))
+        //{
+        //    m_FSM.changeState(JUMP_SECOND);
+        //    return;
+        //}
 
         float moveAxis = Input.GetAxisRaw("Horizontal");
         float moveAbs = Mathf.Abs(moveAxis);
@@ -329,6 +325,11 @@ public class Movement : MonoBehaviour
 
         rb.velocity = new Vector2(fHorizontalVelocity, rb.velocity.y);
 
+    }
+
+    void stJumpEnd()
+    {
+        
     }
 
     void stJumpSecond()
@@ -448,8 +449,11 @@ public class Movement : MonoBehaviour
         player.transform.localScale = new Vector3(-1 * moveAxis, 1, 1);
 
         rb.velocity = new Vector2(rb.velocity.x + moveAxis * wallJumpControllSpeed * Time.deltaTime, rb.velocity.y);
-        
+    }
 
+    void stWallJumpEnd()
+    {
+        m_Anim.SetBool("Jump", false);
     }
 
     void GroundTouch()
