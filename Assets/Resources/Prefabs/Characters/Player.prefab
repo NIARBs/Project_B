@@ -82,10 +82,10 @@ GameObject:
   m_Component:
   - component: {fileID: 3995934511970857433}
   - component: {fileID: 3995934511970857432}
+  - component: {fileID: 3995934511970857434}
   - component: {fileID: 3995934511970857415}
   - component: {fileID: 3995934511970857412}
   - component: {fileID: 3995934511970857413}
-  - component: {fileID: 3995934511970857434}
   - component: {fileID: 3995934511970857435}
   m_Layer: 0
   m_Name: Player
@@ -122,13 +122,52 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82a156f575e1f3444ac704e775d7361f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  animator: {fileID: 4922673494692042605}
   eyeSight: {fileID: 3995934510486347625}
   headBone: {fileID: 6347078883413917385}
-  eyeBoneR: {fileID: 0}
   isTracking: 1
   limitEyeSightRange: 50
   isRightFront: 0
-  isHeadFlip: 0
+  useBlink: 1
+--- !u!114 &3995934511970857434
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3995934511970857438}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5a66cb877de402429cadc56ea54e02d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rb: {fileID: 0}
+  player: {fileID: 7063558825572310950}
+  speed: 5
+  acceleration: 20
+  jumpForce: 20
+  wallJumpForce: 15
+  wallJumpControllSpeed: 10
+  slideSpeed: 2
+  wallJumpLerp: 10
+  dashSpeed: 20
+  wallJumpDir: {x: 1, y: 2}
+  canMove: 1
+  wallGrab: 0
+  wallJumped: 0
+  wallSlide: 0
+  isDashing: 0
+  side: 1
+  dashParticle: {fileID: 0}
+  jumpParticle: {fileID: 0}
+  wallJumpParticle: {fileID: 0}
+  slideParticle: {fileID: 0}
+  fHorizontalAcceleration: 10
+  fHorizontalDampingBasic: 0.5
+  fHorizontalDampingWhenStopping: 0.5
+  fHorizontalDampingWhenTurning: 1
+  knockBackRange: 6
+  restTime: 2
 --- !u!50 &3995934511970857415
 Rigidbody2D:
   serializedVersion: 4
@@ -180,45 +219,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   fallMultiplier: 3
   lowJumpMultiplier: 8
---- !u!114 &3995934511970857434
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3995934511970857438}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f5a66cb877de402429cadc56ea54e02d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  rb: {fileID: 0}
-  player: {fileID: 7063558825572310950}
-  speed: 5
-  acceleration: 20
-  jumpForce: 20
-  wallJumpForce: 15
-  wallJumpControllSpeed: 10
-  slideSpeed: 2
-  wallJumpLerp: 10
-  dashSpeed: 20
-  wallJumpDir: {x: 1, y: 2}
-  canMove: 1
-  wallGrab: 0
-  wallJumped: 0
-  wallSlide: 0
-  isDashing: 0
-  side: 1
-  dashParticle: {fileID: 0}
-  jumpParticle: {fileID: 0}
-  wallJumpParticle: {fileID: 0}
-  slideParticle: {fileID: 0}
-  fHorizontalAcceleration: 10
-  fHorizontalDampingBasic: 0.5
-  fHorizontalDampingWhenStopping: 0.5
-  fHorizontalDampingWhenTurning: 1
-  knockBackRange: 6
-  restTime: 2
 --- !u!114 &3995934511970857435
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -326,6 +326,12 @@ GameObject:
 --- !u!4 &3040886583503720316 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2109671962424990050, guid: 1706d14895643014d92d2ad9c0578f27,
+    type: 3}
+  m_PrefabInstance: {fileID: 3995934511959168542}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &4922673494692042605 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 8296950143112266099, guid: 1706d14895643014d92d2ad9c0578f27,
     type: 3}
   m_PrefabInstance: {fileID: 3995934511959168542}
   m_PrefabAsset: {fileID: 0}
