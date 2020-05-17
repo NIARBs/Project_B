@@ -19,6 +19,7 @@ public class EyeSight : MonoBehaviour
     [SerializeField] GameObject eyeSight;
     [Tooltip ("플레이어의 머리부분 오브젝트를 넣습니다. Bone이 있을 경우, 머리에 해당되는 Bone을 넣습니다. (눈동자 움직임이 있어야 하는 경우 Head Bone 자식으로 설정)")]
     [SerializeField] GameObject headBone;
+    [SerializeField] Transform eyeBoneR;
 
     [Header ("- 마우스 트래킹 설정")]
     [Tooltip ("플레이어 캐릭터가 마우스를 쳐다볼 것인지 설정합니다.")]
@@ -42,14 +43,16 @@ public class EyeSight : MonoBehaviour
 
     void Start() 
     {
-        eyeLimitAngle.upRightAngle = 90.0f - limitEyeSightRange;
-        eyeLimitAngle.upLeftAngle = 90.0f + limitEyeSightRange;
-        eyeLimitAngle.downRightAngle = -90.0f + limitEyeSightRange;
-        eyeLimitAngle.downLeftAngle = 270.0f - limitEyeSightRange;
+        eyeLimitAngle.upRightAngle = 0.0f + limitEyeSightRange;
+        eyeLimitAngle.upLeftAngle = 0.0f + limitEyeSightRange;
+        eyeLimitAngle.downRightAngle = 180.0f - limitEyeSightRange;
+        eyeLimitAngle.downLeftAngle = 180.0f - limitEyeSightRange;
         headLimitAngle.upRightAngle = 0.0f + limitEyeSightRange;
         headLimitAngle.upLeftAngle = 0.0f - limitEyeSightRange;
         headLimitAngle.downRightAngle = -90.0f + limitEyeSightRange;
         headLimitAngle.downLeftAngle = 90.0f - limitEyeSightRange;
+
+        eyeBoneR = headBone.transform.GetChild(1);
     }
 
     void Update()
@@ -94,7 +97,7 @@ public class EyeSight : MonoBehaviour
         // Debug.DrawRay(head.transform.position, Vector3.right * 0.5f, Color.red);
         // Debug.DrawRay(head.transform.position, Vector3.left * 0.5f, Color.red);
     }
-
+    
     void FixedUpdate()
     {
         if(isTracking)
@@ -107,8 +110,8 @@ public class EyeSight : MonoBehaviour
             mousePos = ray.GetPoint(distance);
             playerPos = this.transform.position;
 
-            TrackingMouse();
             SetPlayerHeadFront();
+            TrackingMouse();
         }
     }
 
@@ -118,82 +121,110 @@ public class EyeSight : MonoBehaviour
 
         float rad = Mathf.Atan2(structPos.x, structPos.y);
         float mouseRotate = (rad * 180) / Mathf.PI;
-        float unityEyeAngle = (-mouseRotate + 90);
-        float unityHeadAngle = !isHeadFlip ? (-mouseRotate - 90) : mouseRotate + 90;
+        float unityEyeAngle = -mouseRotate;
+        float unityHeadAngle = -mouseRotate - 90;
         float convertToEyeAngle = ConvertToAngle(unityEyeAngle);
-        float convertToHeadAngle = ConvertToHeadAngle(unityHeadAngle + (isRightFront ? 180 : 0));
+        float convertToHeadAngle = ConvertToHeadAngle(unityHeadAngle);
 
-        for(int idx = 0; idx < headBone.transform.childCount; ++idx)
+        // 머리 회전
+        headBone.transform.localEulerAngles = new Vector3(0, 0, isRightFront ? -(convertToHeadAngle * 0.15f) : convertToHeadAngle * 0.15f);
+
+        // 눈 회전
+        for (int idx = 0; idx < headBone.transform.childCount; ++idx)
         {
             Transform eyeBone = headBone.transform.GetChild(idx);
             if (eyeBone == null || eyeBone.gameObject.activeInHierarchy == false)
                 continue;
 
-            eyeBone.localEulerAngles = new Vector3(0, 0, convertToEyeAngle - 90);
+            eyeBone.localEulerAngles = new Vector3(0, 0, convertToEyeAngle);
         }
-        headBone.transform.localEulerAngles = new Vector3(0, 0, isRightFront ? - (convertToHeadAngle * 0.15f) : convertToHeadAngle * 0.15f);
-        eyeSight.transform.localEulerAngles = new Vector3(0, 0, convertToEyeAngle - 90);
+
+        // 시야 회전
+        if (eyeBoneR == null || eyeBoneR.gameObject.activeInHierarchy == false)
+        {
+            Debug.Log("우측 눈을 찾지 못하였습니다. (연결이 되지 않았거나, 꺼져있음)");
+            return;
+        }
+
+        eyeSight.transform.localEulerAngles = isRightFront ? -eyeBoneR.localEulerAngles : eyeBoneR.localEulerAngles;
+        eyeSight.transform.position = eyeBoneR.position;
     }
 
     float ConvertToAngle(float unityAngle)
     {
+        float eyeAngle = isRightFront ? -unityAngle : unityAngle;
+
         // 우상단 제한
-        if(90.0f > unityAngle && eyeLimitAngle.upRightAngle < unityAngle)
+        if (0.0f < eyeAngle && eyeLimitAngle.upRightAngle > eyeAngle)
         {
             return eyeLimitAngle.upRightAngle;
         }
         // 좌상단 제한
-        else if(90.0f < unityAngle && eyeLimitAngle.upLeftAngle > unityAngle)
+        else if(0.0f < eyeAngle && eyeLimitAngle.upLeftAngle > eyeAngle)
         {
             return eyeLimitAngle.upLeftAngle;
         }
         // 우하단 제한
-        else if(-90.0f < unityAngle && eyeLimitAngle.downRightAngle > unityAngle)
+        else if(180.0f > eyeAngle && eyeLimitAngle.downRightAngle < eyeAngle)
         {
             return eyeLimitAngle.downRightAngle;
         }
         // 좌하단 제한
-        else if(270.0f > unityAngle && eyeLimitAngle.downLeftAngle < unityAngle)
+        else if(180.0f > eyeAngle && eyeLimitAngle.downLeftAngle < eyeAngle)
         {
             return eyeLimitAngle.downLeftAngle;
         }
         else
         {
-            return unityAngle;
+            return eyeAngle;
         }
     }
 
     float ConvertToHeadAngle(float unityHeadAngle)
     {
+        float rightFrontAngle = isRightFront ? (isHeadFlip ? -180 :180) : 0;
+        float headAngle = isHeadFlip ? unityHeadAngle - rightFrontAngle : unityHeadAngle + rightFrontAngle;
+
         // 우상단 제한
-        if(0.0f > unityHeadAngle && headLimitAngle.upRightAngle < unityHeadAngle)
+        if (0.0f > headAngle && headLimitAngle.upRightAngle < headAngle)
         {
             return headLimitAngle.upRightAngle;
         }
         // 좌상단 제한
-        else if(0.0f < unityHeadAngle && headLimitAngle.upLeftAngle > unityHeadAngle)
+        else if(0.0f < headAngle && headLimitAngle.upLeftAngle > headAngle)
         {
             return headLimitAngle.upLeftAngle;
         }
         // 우하단 제한
-        else if(-90.0f < unityHeadAngle && headLimitAngle.downRightAngle > unityHeadAngle)
+        else if(-90.0f < headAngle && headLimitAngle.downRightAngle > headAngle)
         {
             return headLimitAngle.downRightAngle;
         }
         // 좌하단 제한
-        else if(90.0f > unityHeadAngle && headLimitAngle.downLeftAngle < unityHeadAngle)
+        else if(90.0f > headAngle && headLimitAngle.downLeftAngle < headAngle)
         {
             return headLimitAngle.downLeftAngle;
         }
         else
         {
-            return unityHeadAngle;
+            return headAngle;
         }
     }
 
     void SetPlayerHeadFront()
     {
-        if(isRightFront && mousePos.x < playerPos.x)
+        if (Input.GetKey(KeyCode.A) && isHeadFlip)
+        {
+            InverseHeadFlip();
+            TurnHead();
+        }
+        else if (Input.GetKey(KeyCode.D) && !isHeadFlip)
+        {
+            InverseHeadFlip();
+            TurnHead();
+        }
+
+        if (isRightFront && mousePos.x < playerPos.x)
         {
             isRightFront = false;
             TurnHead();
@@ -203,22 +234,10 @@ public class EyeSight : MonoBehaviour
             isRightFront = true;
             TurnHead();
         }
-
-        if(Input.GetKey(KeyCode.A) && isHeadFlip)
-        {
-            InverseHeadFlip();
-            TurnHead();
-        }
-        else if(Input.GetKey(KeyCode.D) && !isHeadFlip)
-        {
-            InverseHeadFlip();
-            TurnHead();
-        }
     }
 
     void TurnHead()
     {
-        //headBone.transform.localScale = new Vector3(headBone.transform.localScale.x, -headBone.transform.localScale.y, 1);
         Transform neckBone = headBone.transform.parent;
         if (neckBone.gameObject.activeInHierarchy)
         {
