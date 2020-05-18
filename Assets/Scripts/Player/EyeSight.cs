@@ -15,11 +15,12 @@ public class EyeSight : MonoBehaviour
     }
 
     [Header ("- 오브젝트 설정")]
+    [SerializeField] Animator animator;
     [Tooltip ("플레이어의 시야 오브젝트를 넣습니다.")]
     [SerializeField] GameObject eyeSight;
     [Tooltip ("플레이어의 머리부분 오브젝트를 넣습니다. Bone이 있을 경우, 머리에 해당되는 Bone을 넣습니다. (눈동자 움직임이 있어야 하는 경우 Head Bone 자식으로 설정)")]
     [SerializeField] GameObject headBone;
-    [SerializeField] Transform eyeBoneR;
+    Transform eyeBoneR;
 
     [Header ("- 마우스 트래킹 설정")]
     [Tooltip ("플레이어 캐릭터가 마우스를 쳐다볼 것인지 설정합니다.")]
@@ -27,19 +28,23 @@ public class EyeSight : MonoBehaviour
     [Tooltip ("플레이어 캐릭터가 마우스를 쳐다보는 각도를 제한합니다. 캐릭터를 기준으로 < 위(0도)와 아래(180도) +- limitEyeSightRange / 2 >")]
     [SerializeField] float limitEyeSightRange = 50.0f;
 
-    [Header ("- 플레이어, 시야 동기화")][Tooltip ("게임이 시작될 때 플레이어 캐릭터가 바라보는 방향을 설정합니다.")]
+    [Header ("- 시야 설정")][Tooltip ("게임이 시작될 때 플레이어 캐릭터가 바라보는 방향을 설정합니다.")]
     [SerializeField] bool isRightFront = true;
+    [Tooltip("플레이어 캐릭터의 눈 깜빡임을 설정합니다.")]
+    [SerializeField] bool useBlink = false;
 
-    public bool isHeadFlip = false;
+    Light2D light2D;
+    bool isHeadFlip = false;
+    bool isBlinking = false;
 
-    private LimitAngle eyeLimitAngle;
-    private LimitAngle headLimitAngle;
+    LimitAngle eyeLimitAngle;
+    LimitAngle headLimitAngle;
 
-    private Vector3 mousePos;
-    private Vector3 playerPos;
+    Vector3 mousePos;
+    Vector3 playerPos;
 
-    private GameObject hitObj = null;
-    private bool alreadyHit = false;
+    GameObject hitObj = null;
+    bool alreadyHit = false;
 
     void Start() 
     {
@@ -53,10 +58,16 @@ public class EyeSight : MonoBehaviour
         headLimitAngle.downLeftAngle = 90.0f - limitEyeSightRange;
 
         eyeBoneR = headBone.transform.GetChild(1);
+        light2D = eyeSight.GetComponent<Light2D>();
     }
 
     void Update()
     {
+        if (useBlink && isBlinking == false)
+        {
+            StartCoroutine("StartBlink");
+        }
+
         RaycastHit2D hit = Physics2D.Raycast(eyeSight.transform.position, mousePos - playerPos, 8);
         if(hit)
         {
@@ -253,5 +264,56 @@ public class EyeSight : MonoBehaviour
     public void InverseHeadFlip()
     {
         isHeadFlip = !isHeadFlip;
+    }
+
+    IEnumerator StartBlink()
+    {
+        isBlinking = true;
+        float time = 0.0f;
+        while (time < 2.0f)
+        {
+            time += 0.1f;
+            yield return new WaitForSeconds(0.1f);
+        }
+
+        // 도중에 눈 깜빡임이 꺼질 경우
+        if (useBlink == false)
+        {
+            isBlinking = false;
+
+            yield break;
+        }
+
+        float innerAngle = light2D.pointLightInnerAngle;
+        float outerAngle = light2D.pointLightOuterAngle;
+        float intervalAngle = innerAngle / 3;
+
+        animator.SetBool("Blink", true);
+        // 눈 깜빡일 때 시야 라이트도 같이 줄어들고 커짐
+        while (time <= 2.05f)
+        {
+            if (time < 2.03f)
+            {
+                light2D.pointLightInnerAngle -= intervalAngle;
+                light2D.pointLightOuterAngle -= intervalAngle;
+            }
+            else
+            {
+                light2D.pointLightInnerAngle += intervalAngle;
+                light2D.pointLightOuterAngle += intervalAngle;
+            }
+            time += 0.01f;
+            yield return new WaitForSeconds(0.01f);
+        }
+        
+        // 시야 라이트 각도 원상복구
+        light2D.pointLightInnerAngle = innerAngle;
+        light2D.pointLightOuterAngle = outerAngle;
+        animator.SetBool("Blink", false);
+
+        if (useBlink)
+        {
+            StartCoroutine("StartBlink");
+        }
     }
 }

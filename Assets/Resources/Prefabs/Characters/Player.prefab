@@ -25,7 +25,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3995934510486347625}
   m_LocalRotation: {x: -0, y: -0, z: 0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: -0.032, y: 1.211, z: 0.601765}
+  m_LocalPosition: {x: -0.205, y: 1.211, z: 0.601765}
   m_LocalScale: {x: 1.2499999, y: 1.2499999, z: 1}
   m_Children: []
   m_Father: {fileID: 3995934511970857433}
@@ -47,7 +47,7 @@ MonoBehaviour:
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.571
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 2.63
+  m_Intensity: 0.6
   m_LightVolumeOpacity: 0
   m_ApplyToSortingLayers: 2d753fe900000000e5c8bcab
   m_LightCookieSprite: {fileID: 0}
@@ -60,7 +60,7 @@ MonoBehaviour:
   m_PointLightOuterAngle: 25
   m_PointLightInnerRadius: 3
   m_PointLightOuterRadius: 10
-  m_PointLightDistance: 3
+  m_PointLightDistance: 2.45
   m_PointLightQuality: 1
   m_ShapeLightParametricSides: 5
   m_ShapeLightParametricAngleOffset: 0
@@ -82,10 +82,10 @@ GameObject:
   m_Component:
   - component: {fileID: 3995934511970857433}
   - component: {fileID: 3995934511970857432}
+  - component: {fileID: 3995934511970857434}
   - component: {fileID: 3995934511970857415}
   - component: {fileID: 3995934511970857412}
   - component: {fileID: 3995934511970857413}
-  - component: {fileID: 3995934511970857434}
   - component: {fileID: 3995934511970857435}
   m_Layer: 0
   m_Name: Player
@@ -122,13 +122,52 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82a156f575e1f3444ac704e775d7361f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  animator: {fileID: 4922673494692042605}
   eyeSight: {fileID: 3995934510486347625}
   headBone: {fileID: 6347078883413917385}
-  eyeBoneR: {fileID: 0}
   isTracking: 1
   limitEyeSightRange: 50
   isRightFront: 0
-  isHeadFlip: 0
+  useBlink: 1
+--- !u!114 &3995934511970857434
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3995934511970857438}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5a66cb877de402429cadc56ea54e02d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rb: {fileID: 0}
+  player: {fileID: 7063558825572310950}
+  speed: 5
+  acceleration: 20
+  jumpForce: 20
+  wallJumpForce: 15
+  wallJumpControllSpeed: 10
+  slideSpeed: 2
+  wallJumpLerp: 10
+  dashSpeed: 20
+  wallJumpDir: {x: 1, y: 2}
+  canMove: 1
+  wallGrab: 0
+  wallJumped: 0
+  wallSlide: 0
+  isDashing: 0
+  side: 1
+  dashParticle: {fileID: 0}
+  jumpParticle: {fileID: 0}
+  wallJumpParticle: {fileID: 0}
+  slideParticle: {fileID: 0}
+  fHorizontalAcceleration: 10
+  fHorizontalDampingBasic: 0.5
+  fHorizontalDampingWhenStopping: 0.5
+  fHorizontalDampingWhenTurning: 1
+  knockBackRange: 6
+  restTime: 2
 --- !u!50 &3995934511970857415
 Rigidbody2D:
   serializedVersion: 4
@@ -180,45 +219,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   fallMultiplier: 3
   lowJumpMultiplier: 8
---- !u!114 &3995934511970857434
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3995934511970857438}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f5a66cb877de402429cadc56ea54e02d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  rb: {fileID: 0}
-  player: {fileID: 7063558825572310950}
-  speed: 5
-  acceleration: 20
-  jumpForce: 20
-  wallJumpForce: 15
-  wallJumpControllSpeed: 10
-  slideSpeed: 2
-  wallJumpLerp: 10
-  dashSpeed: 20
-  wallJumpDir: {x: 1, y: 2}
-  canMove: 1
-  wallGrab: 0
-  wallJumped: 0
-  wallSlide: 0
-  isDashing: 0
-  side: 1
-  dashParticle: {fileID: 0}
-  jumpParticle: {fileID: 0}
-  wallJumpParticle: {fileID: 0}
-  slideParticle: {fileID: 0}
-  fHorizontalAcceleration: 10
-  fHorizontalDampingBasic: 0.5
-  fHorizontalDampingWhenStopping: 0.5
-  fHorizontalDampingWhenTurning: 1
-  knockBackRange: 6
-  restTime: 2
 --- !u!114 &3995934511970857435
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -326,6 +326,12 @@ GameObject:
 --- !u!4 &3040886583503720316 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2109671962424990050, guid: 1706d14895643014d92d2ad9c0578f27,
+    type: 3}
+  m_PrefabInstance: {fileID: 3995934511959168542}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &4922673494692042605 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 8296950143112266099, guid: 1706d14895643014d92d2ad9c0578f27,
     type: 3}
   m_PrefabInstance: {fileID: 3995934511959168542}
   m_PrefabAsset: {fileID: 0}

@@ -23,7 +23,7 @@ public class Movement : MonoBehaviour
     public float acceleration = 20;
     public float jumpForce = 50;
     public float wallJumpForce = 50;
-    public float attackJumpForce = 30;
+    public float attackJumpForce = 15;
     public float wallJumpControllSpeed = 30;
     public float slideSpeed = 5;
     public float wallJumpLerp = 10;
