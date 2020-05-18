@@ -114,7 +114,7 @@ public class EyeSight : MonoBehaviour
         if(isTracking)
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            Plane xy = new Plane(Vector3.forward, new Vector3(0, 0, 0));
+            Plane xy = new Plane(Vector3.forward, Vector3.zero);
 
             float distance;
             xy.Raycast(ray, out distance);

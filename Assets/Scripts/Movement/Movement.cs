@@ -423,7 +423,10 @@ public class Movement : MonoBehaviour
         }
 
         float moveAxis = Input.GetAxisRaw("Horizontal");
-        player.transform.localScale = new Vector3(-1 * moveAxis, 1, 1);
+        if (moveAxis != 0)
+        {
+            player.transform.localScale = new Vector3(-1 * moveAxis, 1, 1);
+        }
 
         rb.velocity = new Vector2(rb.velocity.x + moveAxis * wallJumpControllSpeed * Time.deltaTime, rb.velocity.y);
     }
