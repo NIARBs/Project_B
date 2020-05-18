@@ -23,6 +23,7 @@ public class Movement : MonoBehaviour
     public float acceleration = 20;
     public float jumpForce = 50;
     public float wallJumpForce = 50;
+    public float attackJumpForce = 30;
     public float wallJumpControllSpeed = 30;
     public float slideSpeed = 5;
     public float wallJumpLerp = 10;
@@ -77,6 +78,7 @@ public class Movement : MonoBehaviour
     private const int JUMP_SECOND = 3;
     private const int WALL_GRAB = 5;
     private const int WALL_JUMP = 6;
+    private const int ATTACK_JUMP = 7;
 
     #endregion
 
@@ -89,7 +91,7 @@ public class Movement : MonoBehaviour
         m_FSM.SetCallback(JUMP, stJump, stJumpBegin, stJumpEnd);
         m_FSM.SetCallback(WALL_GRAB, stWallGrab, stWallGrabBegin, stWallGrabEnd);
         m_FSM.SetCallback(WALL_JUMP, stWallJump, stWallJumpBegin, stWallJumpEnd);
-        m_FSM.SetCallback(JUMP_SECOND, stJumpSecond, stJumpBegin, null);
+        m_FSM.SetCallback(ATTACK_JUMP, stJump, stAttackJumpBegin, stJumpEnd);
     }
 
     void Start()
@@ -112,13 +114,6 @@ public class Movement : MonoBehaviour
         float yRaw = Input.GetAxisRaw("Vertical");
         Vector2 dir = new Vector2(x, y);
 
-
-        if (coll.onGround && !isDashing)
-        {
-            wallJumped = false;
-            GetComponent<BetterJumping>().enabled = true;
-        }
-
         if (wallGrab && !isDashing)
         {
             rb.gravityScale = 0;
@@ -134,23 +129,10 @@ public class Movement : MonoBehaviour
             rb.gravityScale = 3;
         }
 
-
-        //if (coll.onGround && !groundTouch)
-        //{
-        //    GroundTouch();
-        //    groundTouch = true;
-        //}
-
-        //if (!coll.onGround && groundTouch)
-        //{
-        //    groundTouch = false;
-        //}
     }
 
     private void stIdleBegin()
     {
-        Debug.Log("IDLE_BEGIN");
-        m_Anim.Play("Player_Idle");
         m_Anim.SetFloat("Move", 0);
 
         wallJumped = false;
@@ -173,8 +155,6 @@ public class Movement : MonoBehaviour
 
     private void stWalkBegin()
     {
-        Debug.Log("Walk Begin velocity : " + rb.velocity.x);
-
         accAccleration = 0;
 
         float moveAxis = Input.GetAxisRaw("Horizontal");
@@ -185,6 +165,9 @@ public class Movement : MonoBehaviour
 
     private void stWalk()
     {
+        if (m_FSM.curState != WALK)
+            return;
+
         float moveAxis = Input.GetAxisRaw("Horizontal");
         float moveAbs = Mathf.Abs(moveAxis);
 
@@ -194,7 +177,7 @@ public class Movement : MonoBehaviour
             return;
         }
 
-        if (Input.GetButtonDown("Jump"))
+        if (Input.GetButtonDown("Jump") && coll.onGround)
         {
             m_FSM.changeState(JUMP);
             return;
@@ -221,7 +204,6 @@ public class Movement : MonoBehaviour
 
         accAccleration += moveAxis * acceleration * Time.deltaTime;
 
-        Debug.Log("Walk velocity : " + rb.velocity.x);
         float fHorizontalVelocity = rb.velocity.x;
         fHorizontalVelocity += accAccleration;
 
@@ -258,6 +240,7 @@ public class Movement : MonoBehaviour
         rb.velocity += Vector2.up * jumpForce;
 
         coll.onGround = false;
+        GetComponent<BetterJumping>().enabled = true;
     }
 
     void stJump()
@@ -273,12 +256,6 @@ public class Movement : MonoBehaviour
             m_FSM.changeState(WALL_GRAB);
             return;
         }
-
-        //if(rb.velocity.y > 0 && Input.GetButtonDown("Jump"))
-        //{
-        //    m_FSM.changeState(JUMP_SECOND);
-        //    return;
-        //}
 
         float moveAxis = Input.GetAxisRaw("Horizontal");
         float moveAbs = Mathf.Abs(moveAxis);
@@ -329,7 +306,7 @@ public class Movement : MonoBehaviour
 
     void stJumpEnd()
     {
-        
+        m_Anim.SetBool("Jump", false);
     }
 
     void stJumpSecond()
@@ -423,7 +400,7 @@ public class Movement : MonoBehaviour
 
     void stWallJumpBegin()
     {
-        m_Anim.SetBool("Jump", true);
+        m_Anim.SetBool("WallJump", true);
 
         Vector2 wallDir = coll.onRightWall ? new Vector2(-wallJumpDir.x, wallJumpDir.y) : wallJumpDir;
 
@@ -453,15 +430,17 @@ public class Movement : MonoBehaviour
 
     void stWallJumpEnd()
     {
-        m_Anim.SetBool("Jump", false);
+        m_Anim.SetBool("WallJump", false);
     }
 
-    void GroundTouch()
+    void stAttackJumpBegin()
     {
-        hasDashed = false;
-        isDashing = false;
-        m_Anim.SetBool("Jump", false);
-        m_Anim.SetBool("WallGrab", false);
+        m_Anim.SetBool("Jump", true);
+
+        rb.velocity = new Vector2(rb.velocity.x, 0);
+        rb.velocity += Vector2.up * attackJumpForce;
+
+        coll.onGround = false;
     }
 
     void OnTriggerEnter2D(Collider2D collision)
@@ -480,13 +459,13 @@ public class Movement : MonoBehaviour
     {
         if (collision.gameObject.tag == "Enemy")
         {
-            if (rb.velocity.y < 0 && transform.position.y + 1 > collision.transform.position.y)
+            if (rb.velocity.y <= 0 && transform.position.y + 1 > collision.transform.position.y)
             {
                 TargetAttack(collision.transform);
             }
             else
             {
-                OnDamaged(collision.transform);
+                //OnDamaged(collision.transform);
             }
         }
     }
@@ -516,8 +495,9 @@ public class Movement : MonoBehaviour
 
     void TargetAttack(Transform enemy)
     {
-        rb.AddForce(Vector2.up * 10, ForceMode2D.Impulse);
         Enemy enemyObject = enemy.GetComponent<Enemy>();
         enemyObject.OnDamaged();
+
+        m_FSM.changeState(ATTACK_JUMP);
     }
 }

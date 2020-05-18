@@ -8,7 +8,6 @@ public class Collision : MonoBehaviour
 
     [Header("Layers")]
     public LayerMask groundLayer;
-    public LayerMask wallLayer;
 
     [Space]
 
@@ -58,8 +57,8 @@ public class Collision : MonoBehaviour
             onGround = true;
         }
 
-        onRightWall = Physics2D.OverlapCircle((Vector2)transform.position + rightOffset, collisionRadius, wallLayer);
-        onLeftWall = Physics2D.OverlapCircle((Vector2)transform.position + leftOffset, collisionRadius, wallLayer);
+        onRightWall = Physics2D.OverlapCircle((Vector2)transform.position + rightOffset, collisionRadius, groundLayer);
+        onLeftWall = Physics2D.OverlapCircle((Vector2)transform.position + leftOffset, collisionRadius, groundLayer);
         if(onLeftWall == true && rb.velocity.y > 0)
         {
             onLeftWall = false;

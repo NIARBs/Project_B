@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Dynamic;
 using UnityEngine;
 
 public delegate void stUpdate();
@@ -31,6 +32,7 @@ public class StateMachine
 
     public int globalState { get; private set; }
     public int curState { get; private set; }
+    public int beforeState { get; private set; }
 
     public bool Stop { get; set; }
 
@@ -53,6 +55,7 @@ public class StateMachine
     {
         dicState[curState].end?.Invoke();
 
+        beforeState = curState;
         curState = type_;
 
         dicState[curState].begin?.Invoke();

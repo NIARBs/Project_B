@@ -41,7 +41,7 @@ public class Enemy_Mushroomy : Enemy
         RaycastHit2D frontRayHit = Physics2D.Raycast(frontVec, nextFrontVec, 0.4f, LayerMask.GetMask("Ground"));
         if (downRayHit.collider == null || frontRayHit.collider != null)
         {
-            Debug.Log("더이상 플랫폼이 없어요!!!");
+            //Debug.Log("더이상 플랫폼이 없어요!!!");
             Turn();
         }
     }
