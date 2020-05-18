@@ -367,6 +367,15 @@ public class Movement : MonoBehaviour
     void stWallGrabBegin()
     {
         m_Anim.SetBool("WallGrab", true);
+
+        if(coll.onRightWall)
+        {
+            player.transform.localScale = new Vector3(-1, 1, 1);
+        }
+        else if(coll.onLeftWall)
+        {
+            player.transform.localScale = new Vector3(1, 1, 1);
+        }
     }
 
     void stWallGrab()
