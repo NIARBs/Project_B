@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine.Experimental.Rendering.Universal;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 public class EyeSight : MonoBehaviour
 {
@@ -46,6 +47,9 @@ public class EyeSight : MonoBehaviour
     GameObject hitObj = null;
     bool alreadyHit = false;
 
+    float innerAngle;
+    float outerAngle;
+
     void Start() 
     {
         eyeLimitAngle.upRightAngle = 0.0f + limitEyeSightRange;
@@ -59,6 +63,9 @@ public class EyeSight : MonoBehaviour
 
         eyeBoneR = headBone.transform.GetChild(1);
         light2D = eyeSight.GetComponent<Light2D>();
+
+        innerAngle = light2D.pointLightInnerAngle;
+        outerAngle = light2D.pointLightOuterAngle;
     }
 
     void Update()
@@ -66,6 +73,22 @@ public class EyeSight : MonoBehaviour
         if (useBlink && isBlinking == false)
         {
             StartCoroutine("StartBlink");
+        }
+
+        if (Input.GetMouseButton(1))
+        {
+            useBlink = false;
+            animator.SetBool("Blink", true);
+            light2D.pointLightInnerAngle = 0.0f;
+            light2D.pointLightOuterAngle = 0.0f;
+        }
+
+        if (Input.GetMouseButtonUp(1))
+        {
+            useBlink = true;
+            animator.SetBool("Blink", false);
+            light2D.pointLightInnerAngle = innerAngle;
+            light2D.pointLightOuterAngle = outerAngle;
         }
 
         RaycastHit2D hit = Physics2D.Raycast(eyeSight.transform.position, mousePos - playerPos, 8);
@@ -284,8 +307,6 @@ public class EyeSight : MonoBehaviour
             yield break;
         }
 
-        float innerAngle = light2D.pointLightInnerAngle;
-        float outerAngle = light2D.pointLightOuterAngle;
         float intervalAngle = innerAngle / 3;
 
         animator.SetBool("Blink", true);
