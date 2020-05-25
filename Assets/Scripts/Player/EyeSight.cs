@@ -91,7 +91,13 @@ public class EyeSight : MonoBehaviour
             light2D.pointLightOuterAngle = outerAngle;
         }
 
-        RaycastHit2D hit = Physics2D.Raycast(eyeSight.transform.position, mousePos - playerPos, 8);
+        Vector3 rightPos = eyeSight.transform.position;
+        rightPos.x += 0.3f;
+
+        Vector3 leftPos = eyeSight.transform.position;
+        leftPos.x -= 0.3f;
+
+        RaycastHit2D hit = Physics2D.Raycast(isRightFront ? rightPos : leftPos, mousePos - playerPos, 8);
         if(hit)
         {
             if(hit.collider.gameObject == null)
@@ -127,9 +133,7 @@ public class EyeSight : MonoBehaviour
         }
 
         // 디버깅용
-        Debug.DrawRay(eyeSight.transform.position, mousePos - playerPos, Color.red);
-        // Debug.DrawRay(head.transform.position, Vector3.right * 0.5f, Color.red);
-        // Debug.DrawRay(head.transform.position, Vector3.left * 0.5f, Color.red);
+        Debug.DrawRay(isRightFront ? rightPos : leftPos, mousePos - playerPos, Color.red);
     }
     
     void FixedUpdate()
