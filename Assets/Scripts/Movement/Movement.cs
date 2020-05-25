@@ -28,6 +28,7 @@ public class Movement : MonoBehaviour
     public float slideSpeed = 5;
     public float wallJumpLerp = 10;
     public float dashSpeed = 20;
+    public float dashTime = 0.3f;
     
     public Vector2 wallJumpDir;
 
@@ -75,7 +76,8 @@ public class Movement : MonoBehaviour
     private const int IDLE = 0;
     private const int WALK = 1;
     private const int JUMP = 2;
-    private const int JUMP_SECOND = 3;
+    private const int DASH = 3;
+    private const int JUMP_DASH = 4;
     private const int WALL_GRAB = 5;
     private const int WALL_JUMP = 6;
     private const int ATTACK_JUMP = 7;
@@ -89,6 +91,8 @@ public class Movement : MonoBehaviour
         m_FSM.SetCallback(IDLE, stIdle, stIdleBegin, null);
         m_FSM.SetCallback(WALK, stWalk, stWalkBegin, stWalkEnd);
         m_FSM.SetCallback(JUMP, stJump, stJumpBegin, stJumpEnd);
+        m_FSM.SetCallback(DASH, stDash, stDashBegin, stDashEnd);
+        m_FSM.SetCallback(JUMP_DASH, stJumpDash, stJumpDashBegin, stJumpDashEnd);
         m_FSM.SetCallback(WALL_GRAB, stWallGrab, stWallGrabBegin, stWallGrabEnd);
         m_FSM.SetCallback(WALL_JUMP, stWallJump, stWallJumpBegin, stWallJumpEnd);
         m_FSM.SetCallback(ATTACK_JUMP, stJump, stAttackJumpBegin, stJumpEnd);
@@ -182,6 +186,12 @@ public class Movement : MonoBehaviour
             m_FSM.changeState(JUMP);
             return;
         }
+        if(Input.GetButtonDown("Fire1") && coll.onGround)
+        {
+            m_FSM.changeState(DASH);
+            return;
+        }
+
 
         if ((coll.onLeftWall && moveAxis < 0) || (coll.onRightWall && moveAxis > 0))
         {
@@ -256,6 +266,12 @@ public class Movement : MonoBehaviour
             m_FSM.changeState(WALL_GRAB);
             return;
         }
+        
+        if (Input.GetButtonDown("Fire1"))
+        {
+            m_FSM.changeState(JUMP_DASH);
+            return;
+        }
 
         float moveAxis = Input.GetAxisRaw("Horizontal");
         float moveAbs = Mathf.Abs(moveAxis);
@@ -309,59 +325,82 @@ public class Movement : MonoBehaviour
         m_Anim.SetBool("Jump", false);
     }
 
-    void stJumpSecond()
+    private float accTime;
+
+    void stDashBegin()
     {
-        if (true == coll.onGround)
+        m_Anim.SetBool("WallJump", true);
+        accTime = 0;
+        rb.velocity = rb.velocity.normalized * dashSpeed;
+    }
+
+    void stDash()
+    {
+        accTime += Time.deltaTime;
+        if(accTime >= dashTime)
         {
+            m_FSM.changeState(WALK);
+        }
+    }
+
+    void stDashEnd()
+    {
+        accTime = 0;
+        m_Anim.SetBool("WallJump", false);
+    }
+
+    bool isDash = false;
+
+    void stJumpDashBegin()
+    {
+        m_Anim.SetBool("WallJump", true);
+
+        float x = Input.GetAxisRaw("Horizontal");
+        float y = Input.GetAxisRaw("Vertical");
+
+        Vector2 dir = new Vector2(x, y);
+
+        rb.velocity = dir.normalized * dashSpeed;
+
+        rb.gravityScale = 0;
+        GetComponent<BetterJumping>().enabled = false;
+        accTime = 0;
+        isDash = true;
+    }
+
+    void RigidbodyDrag(float x)
+    {
+        rb.drag = x;
+    }
+
+    void stJumpDash()
+    {
+        accTime += Time.deltaTime;
+        if (accTime < dashTime && isDash == false)
+            return;
+
+        if(isDash == false)
+        {
+            accTime = 0;
+            isDash = true;
+            DOVirtual.Float(14, 0, .8f, RigidbodyDrag);
+        }
+
+        accTime += Time.deltaTime;
+        if(accTime > 0.3)
+        {
+            rb.gravityScale = 3;
+            GetComponent<BetterJumping>().enabled = true;
+        }
+
+        if (coll.onGround)
             m_FSM.changeState(IDLE);
-            return;
-        }
+    }
 
-        if (coll.onWall && rb.velocity.y < 0)
-        {
-            m_FSM.changeState(WALL_GRAB);
-            return;
-        }
-
-        float moveAxis = Input.GetAxisRaw("Horizontal");
-        float moveAbs = Mathf.Abs(moveAxis);
-
-        if (moveAxis == 0)
-        {
-            accAccleration = 0;
-        }
-        else
-        {
-            if (player.transform.localScale.x == moveAxis)
-            {
-                accAccleration = 0;
-            }
-
-            player.transform.localScale = new Vector3(-1 * moveAxis, 1, 1);
-        }
-
-        accAccleration += moveAxis * acceleration * Time.deltaTime;
-
-        float fHorizontalVelocity = rb.velocity.x;
-        fHorizontalVelocity += accAccleration;
-
-        if (moveAbs < 0.01f)
-            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingWhenStopping, Time.deltaTime * 10f);
-        else if (Mathf.Sign(moveAxis) != Mathf.Sign(fHorizontalVelocity))
-            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingWhenTurning, Time.deltaTime * 10f);
-        else
-            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingBasic, Time.deltaTime * 10f);
-
-        if (fHorizontalVelocity >= speed)
-        {
-            fHorizontalVelocity = speed;
-        }
-        else if (fHorizontalVelocity <= -speed)
-        {
-            fHorizontalVelocity = -speed;
-        }
-
-        rb.velocity = new Vector2(fHorizontalVelocity, rb.velocity.y);
+    void stJumpDashEnd()
+    {
+        m_Anim.SetBool("WallJump", false);
+        
     }
 
     void stWallGrabBegin()
