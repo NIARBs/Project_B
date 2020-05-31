@@ -81,6 +81,8 @@ public class Movement : MonoBehaviour
     private const int WALL_GRAB = 5;
     private const int WALL_JUMP = 6;
     private const int ATTACK_JUMP = 7;
+    private const int JUMP_READY = 8;
+    private const int JUMP_END = 9;
 
     #endregion
 
@@ -90,12 +92,14 @@ public class Movement : MonoBehaviour
 
         m_FSM.SetCallback(IDLE, stIdle, stIdleBegin, null);
         m_FSM.SetCallback(WALK, stWalk, stWalkBegin, stWalkEnd);
-        m_FSM.SetCallback(JUMP, stJump, stJumpBegin, stJumpEnd);
+        m_FSM.SetCallback(JUMP, stJump, stJumpBegin, null);
+        m_FSM.SetCallback(JUMP_READY, stJumpReady, stJumpReadyBegin, null);
+        m_FSM.SetCallback(JUMP_END, stJumpEndBegin, stJumpEndNormal, stJumpEndEnd);
         m_FSM.SetCallback(DASH, stDash, stDashBegin, stDashEnd);
         m_FSM.SetCallback(JUMP_DASH, stJumpDash, stJumpDashBegin, stJumpDashEnd);
         m_FSM.SetCallback(WALL_GRAB, stWallGrab, stWallGrabBegin, stWallGrabEnd);
         m_FSM.SetCallback(WALL_JUMP, stWallJump, stWallJumpBegin, stWallJumpEnd);
-        m_FSM.SetCallback(ATTACK_JUMP, stJump, stAttackJumpBegin, stJumpEnd);
+        m_FSM.SetCallback(ATTACK_JUMP, stJump, stAttackJumpBegin, stJumpEndEnd);
     }
 
     void Start()
@@ -105,6 +109,7 @@ public class Movement : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
 
         m_FSM.changeState(IDLE);
+        rb.gravityScale = 3;
     }
 
     // Update is called once per frame
@@ -118,20 +123,6 @@ public class Movement : MonoBehaviour
         float yRaw = Input.GetAxisRaw("Vertical");
         Vector2 dir = new Vector2(x, y);
 
-        if (wallGrab && !isDashing)
-        {
-            rb.gravityScale = 0;
-            if (x > .2f || x < -.2f)
-                rb.velocity = new Vector2(rb.velocity.x, 0);
-
-            float speedModifier = y > 0 ? .5f : 1;
-
-            rb.velocity = new Vector2(rb.velocity.x, y * (speed * speedModifier));
-        }
-        else
-        {
-            rb.gravityScale = 3;
-        }
 
     }
 
@@ -153,7 +144,7 @@ public class Movement : MonoBehaviour
 
         if (Input.GetButtonDown("Jump"))
         {
-            m_FSM.changeState(JUMP);
+            m_FSM.changeState(JUMP_READY);
         }
     }
 
@@ -183,7 +174,7 @@ public class Movement : MonoBehaviour
 
         if (Input.GetButtonDown("Jump") && coll.onGround)
         {
-            m_FSM.changeState(JUMP);
+            m_FSM.changeState(JUMP_READY);
             return;
         }
         if(Input.GetButtonDown("Fire1") && coll.onGround)
@@ -242,10 +233,18 @@ public class Movement : MonoBehaviour
         m_Anim.SetFloat("Move", 0);
     }
 
-    void stJumpBegin()
+    void stJumpReadyBegin()
     {
         m_Anim.SetBool("Jump", true);
+    }
 
+    void stJumpReady()
+    {
+        m_FSM.changeState(JUMP);
+    }
+
+    void stJumpBegin()
+    {
         rb.velocity = new Vector2(rb.velocity.x, 0);
         rb.velocity += Vector2.up * jumpForce;
 
@@ -257,13 +256,17 @@ public class Movement : MonoBehaviour
     {
         if (true == coll.onGround)
         {
-            m_FSM.changeState(IDLE);
+            m_FSM.changeState(JUMP_END);
             return;
         }
 
         if (coll.onWall && rb.velocity.y < 0)
         {
-            m_FSM.changeState(WALL_GRAB);
+            if(Input.GetKey(KeyCode.A) && coll.onLeftWall || Input.GetKey(KeyCode.D) && coll.onRightWall)
+            {
+                m_FSM.changeState(WALL_GRAB);
+            }
+            
             return;
         }
         
@@ -320,7 +323,19 @@ public class Movement : MonoBehaviour
 
     }
 
-    void stJumpEnd()
+    void stJumpEndBegin()
+    {
+
+    }
+
+    void stJumpEndNormal()
+    {
+        m_FSM.changeState(IDLE);
+
+        
+    }
+
+    void stJumpEndEnd()
     {
         m_Anim.SetBool("Jump", false);
     }
@@ -415,6 +430,8 @@ public class Movement : MonoBehaviour
         {
             player.transform.localScale = new Vector3(1, 1, 1);
         }
+
+        rb.gravityScale = 0;
     }
 
     void stWallGrab()
@@ -431,6 +448,12 @@ public class Movement : MonoBehaviour
             return;
         }
 
+        if(false == coll.onWall || Input.GetButtonDown("Horizontal"))
+        {
+            m_FSM.changeState(IDLE);
+            return;
+        }
+
         bool pushingWall = false;
         if ((rb.velocity.x > 0 && coll.onRightWall) || (rb.velocity.x < 0 && coll.onLeftWall))
         {
@@ -444,6 +467,8 @@ public class Movement : MonoBehaviour
     void stWallGrabEnd()
     {
         m_Anim.SetBool("WallGrab", false);
+        m_Anim.SetBool("Jump", false);
+        rb.gravityScale = 3;
     }
 
     void stWallJumpBegin()
