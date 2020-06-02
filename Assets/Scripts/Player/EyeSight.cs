@@ -19,9 +19,11 @@ public class EyeSight : MonoBehaviour
     [SerializeField] Animator animator;
     [Tooltip ("플레이어의 시야 오브젝트를 넣습니다.")]
     [SerializeField] GameObject eyeSight;
+    [SerializeField] GameObject hatBone;
     [Tooltip ("플레이어의 머리부분 오브젝트를 넣습니다. Bone이 있을 경우, 머리에 해당되는 Bone을 넣습니다. (눈동자 움직임이 있어야 하는 경우 Head Bone 자식으로 설정)")]
     [SerializeField] GameObject headBone;
     Transform eyeBoneR;
+    Transform monsterEyeBone;
 
     [Header ("- 마우스 트래킹 설정")]
     [Tooltip ("플레이어 캐릭터가 마우스를 쳐다볼 것인지 설정합니다.")]
@@ -62,6 +64,7 @@ public class EyeSight : MonoBehaviour
         headLimitAngle.downLeftAngle = 90.0f - limitEyeSightRange;
 
         eyeBoneR = headBone.transform.GetChild(1);
+        monsterEyeBone = hatBone.transform.GetChild(0);
         light2D = eyeSight.GetComponent<Light2D>();
 
         innerAngle = light2D.pointLightInnerAngle;
@@ -177,6 +180,8 @@ public class EyeSight : MonoBehaviour
             eyeBone.localEulerAngles = new Vector3(0, 0, convertToEyeAngle);
         }
 
+        monsterEyeBone.localEulerAngles = new Vector3(0, 0, convertToEyeAngle);
+
         // 시야 회전
         if (eyeBoneR == null || eyeBoneR.gameObject.activeInHierarchy == false)
         {
@@ -184,8 +189,8 @@ public class EyeSight : MonoBehaviour
             return;
         }
 
-        eyeSight.transform.localEulerAngles = isRightFront ? -eyeBoneR.localEulerAngles : eyeBoneR.localEulerAngles;
-        eyeSight.transform.position = eyeBoneR.position;
+        eyeSight.transform.localEulerAngles = isRightFront ? -monsterEyeBone.localEulerAngles : monsterEyeBone.localEulerAngles;
+        eyeSight.transform.position = monsterEyeBone.position;
     }
 
     float ConvertToAngle(float unityAngle)
@@ -279,6 +284,7 @@ public class EyeSight : MonoBehaviour
         Transform neckBone = headBone.transform.parent;
         if (neckBone.gameObject.activeInHierarchy)
         {
+            hatBone.transform.localScale = new Vector3(hatBone.transform.localScale.x, -hatBone.transform.localScale.y, 1);
             neckBone.transform.localScale = new Vector3(neckBone.transform.localScale.x, -neckBone.transform.localScale.y, 1);
         }
     }
