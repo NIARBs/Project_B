@@ -74,14 +74,15 @@ public class Movement : MonoBehaviour
     #region state
     private const int IDLE = 0;
     private const int WALK = 1;
-    private const int JUMP = 2;
-    private const int DASH = 3;
-    private const int JUMP_DASH = 4;
-    private const int WALL_GRAB = 5;
-    private const int WALL_JUMP = 6;
-    private const int ATTACK_JUMP = 7;
-    private const int JUMP_READY = 8;
-    private const int JUMP_END = 9;
+    private const int JUMP_UP = 2;
+    private const int JUMP_DOWN = 3;
+    private const int DASH = 4;
+    private const int JUMP_DASH = 5;
+    private const int WALL_GRAB = 6;
+    private const int WALL_JUMP = 7;
+    private const int ATTACK_JUMP = 8;
+    private const int JUMP_READY = 9;
+    private const int JUMP_END = 10;
 
     #endregion
 
@@ -91,14 +92,15 @@ public class Movement : MonoBehaviour
 
         m_FSM.SetCallback(IDLE, stIdle, stIdleBegin, null);
         m_FSM.SetCallback(WALK, stWalk, stWalkBegin, stWalkEnd);
-        m_FSM.SetCallback(JUMP, stJump, stJumpBegin, null);
+        m_FSM.SetCallback(JUMP_UP, stJumpUp, stJumpUpBegin, null);
+        m_FSM.SetCallback(JUMP_DOWN, stJumpDown, stJumpDownBegin, stJumpDownEnd);
         m_FSM.SetCallback(JUMP_READY, stJumpReady, stJumpReadyBegin, null);
-        m_FSM.SetCallback(JUMP_END, stJumpEndBegin, stJumpEndNormal, stJumpEndEnd);
+        m_FSM.SetCallback(JUMP_END, stJumpEndNormal, stJumpEndBegin, stJumpEndEnd);
         m_FSM.SetCallback(DASH, stDash, stDashBegin, stDashEnd);
         m_FSM.SetCallback(JUMP_DASH, stJumpDash, stJumpDashBegin, stJumpDashEnd);
         m_FSM.SetCallback(WALL_GRAB, stWallGrab, stWallGrabBegin, stWallGrabEnd);
         m_FSM.SetCallback(WALL_JUMP, stWallJump, stWallJumpBegin, stWallJumpEnd);
-        m_FSM.SetCallback(ATTACK_JUMP, stJump, stAttackJumpBegin, stJumpEndEnd);
+        m_FSM.SetCallback(ATTACK_JUMP, stJumpUp, stAttackJumpBegin, stJumpEndEnd);
     }
 
     void Start()
@@ -125,6 +127,8 @@ public class Movement : MonoBehaviour
 
     }
 
+    #region IDLE
+
     private void stIdleBegin()
     {
         m_Anim.SetFloat("Move", 0);
@@ -147,6 +151,9 @@ public class Movement : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region WALK
     private void stWalkBegin()
     {
         accAccleration = 0;
@@ -155,6 +162,49 @@ public class Movement : MonoBehaviour
         float moveAbs = Mathf.Abs(moveAxis);
 
         m_Anim.SetFloat("Move", moveAbs);
+    }
+
+    private void MoveCode()
+    {
+        float moveAxis = Input.GetAxisRaw("Horizontal");
+        float moveAbs = Mathf.Abs(moveAxis);
+
+        if (moveAxis == 0)
+        {
+            accAccleration = 0;
+        }
+        else
+        {
+            if (player.transform.localScale.x == moveAxis)
+            {
+                accAccleration = 0;
+            }
+
+            player.transform.localScale = new Vector3(-1 * moveAxis, 1, 1);
+        }
+
+        accAccleration += moveAxis * acceleration * Time.deltaTime;
+
+        float fHorizontalVelocity = rb.velocity.x;
+        fHorizontalVelocity += accAccleration;
+
+        if (moveAbs < 0.01f)
+            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingWhenStopping, Time.deltaTime * 10f);
+        else if (Mathf.Sign(moveAxis) != Mathf.Sign(fHorizontalVelocity))
+            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingWhenTurning, Time.deltaTime * 10f);
+        else
+            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingBasic, Time.deltaTime * 10f);
+
+        if (fHorizontalVelocity >= speed)
+        {
+            fHorizontalVelocity = speed;
+        }
+        else if (fHorizontalVelocity <= -speed)
+        {
+            fHorizontalVelocity = -speed;
+        }
+
+        rb.velocity = new Vector2(fHorizontalVelocity, rb.velocity.y);
     }
 
     private void stWalk()
@@ -188,43 +238,7 @@ public class Movement : MonoBehaviour
             return;
         }
 
-        if (moveAxis == 0)
-        {
-            accAccleration = 0;
-        }
-        else
-        {
-            if (player.transform.localScale.x == moveAxis)
-            {
-                accAccleration = 0;
-            }
-
-            player.transform.localScale = new Vector3(-1 * moveAxis, 1, 1);
-        }
-
-        accAccleration += moveAxis * acceleration * Time.deltaTime;
-
-        float fHorizontalVelocity = rb.velocity.x;
-        fHorizontalVelocity += accAccleration;
-
-        if (moveAbs < 0.01f)
-            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingWhenStopping, Time.deltaTime * 10f);
-        else if (Mathf.Sign(moveAxis) != Mathf.Sign(fHorizontalVelocity))
-            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingWhenTurning, Time.deltaTime * 10f);
-        else
-            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingBasic, Time.deltaTime * 10f);
-
-        if (fHorizontalVelocity >= speed)
-        {
-            fHorizontalVelocity = speed;
-        }
-        else if (fHorizontalVelocity <= -speed)
-        {
-            fHorizontalVelocity = -speed;
-        }
-
-        rb.velocity = new Vector2(fHorizontalVelocity, rb.velocity.y);
-
+        MoveCode();
     }
 
     void stWalkEnd()
@@ -232,17 +246,38 @@ public class Movement : MonoBehaviour
         m_Anim.SetFloat("Move", 0);
     }
 
+    #endregion
+
+    #region JUMP
+
+    #region JUMP_READY
+
+    float accJumpReadyTime = 0;
+    public float JumpReadyTime = 0;
+
     void stJumpReadyBegin()
     {
+        accJumpReadyTime = 0;
         m_Anim.SetBool("Jump", true);
     }
-
+    
     void stJumpReady()
     {
-        m_FSM.changeState(JUMP);
+        accJumpReadyTime += Time.deltaTime;
+        if(accJumpReadyTime < JumpReadyTime)
+        {
+            MoveCode();
+            return;
+        }
+
+        m_FSM.changeState(JUMP_UP);
     }
 
-    void stJumpBegin()
+    #endregion
+
+    #region JUMP_UP
+
+    void stJumpUpBegin()
     {
         rb.velocity = new Vector2(rb.velocity.x, 0);
         rb.velocity += Vector2.up * jumpForce;
@@ -251,87 +286,82 @@ public class Movement : MonoBehaviour
         GetComponent<BetterJumping>().enabled = true;
     }
 
-    void stJump()
+    void stJumpUp()
     {
-        if (true == coll.onGround)
+        if (rb.velocity.y < 0)
         {
-            m_FSM.changeState(JUMP_END);
-            return;
-        }
-
-        if (coll.onWall && rb.velocity.y < 0)
-        {
-            if(Input.GetKey(KeyCode.A) && coll.onLeftWall || Input.GetKey(KeyCode.D) && coll.onRightWall)
-            {
-                m_FSM.changeState(WALL_GRAB);
-            }
-            
-            return;
-        }
-        
-        if (Input.GetButtonDown("Fire1"))
-        {
-            m_FSM.changeState(JUMP_DASH);
+            m_FSM.changeState(JUMP_DOWN);
             return;
         }
 
         float moveAxis = Input.GetAxisRaw("Horizontal");
-        float moveAbs = Mathf.Abs(moveAxis);
 
         if ((coll.onLeftWall && moveAxis < 0) || (coll.onRightWall && moveAxis > 0))
         {
             return;
         }
 
-        if (moveAxis == 0)
-        {
-            accAccleration = 0;
-        }
-        else
-        {
-            if (player.transform.localScale.x == moveAxis)
-            {
-                accAccleration = 0;
-            }
+        MoveCode();
+    }
 
-            player.transform.localScale = new Vector3(-1 * moveAxis, 1, 1);
-        }
+    #endregion
 
-        accAccleration += moveAxis * acceleration * Time.deltaTime;
+    #region JUMP_DOWN
 
-        float fHorizontalVelocity = rb.velocity.x;
-        fHorizontalVelocity += accAccleration;
-
-        if (moveAbs < 0.01f)
-            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingWhenStopping, Time.deltaTime * 10f);
-        else if (Mathf.Sign(moveAxis) != Mathf.Sign(fHorizontalVelocity))
-            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingWhenTurning, Time.deltaTime * 10f);
-        else
-            fHorizontalVelocity *= Mathf.Pow(1f - fHorizontalDampingBasic, Time.deltaTime * 10f);
-
-        if (fHorizontalVelocity >= speed)
-        {
-            fHorizontalVelocity = speed;
-        }
-        else if (fHorizontalVelocity <= -speed)
-        {
-            fHorizontalVelocity = -speed;
-        }
-
-        rb.velocity = new Vector2(fHorizontalVelocity, rb.velocity.y);
+    void stJumpDownBegin()
+    {
 
     }
 
-    void stJumpEndBegin()
+    void stJumpDown()
+    {
+        if(coll.onGround)
+        {
+            m_FSM.changeState(JUMP_END);
+            return;
+        }
+
+        if (Input.GetButtonDown("Jump") && coll.canJump)
+        {
+            m_FSM.changeState(JUMP_READY);
+            return;
+        }
+
+        if (coll.onWall && rb.velocity.y < 0)
+        {
+            if (Input.GetKey(KeyCode.A) && coll.onLeftWall || Input.GetKey(KeyCode.D) && coll.onRightWall)
+            {
+                m_FSM.changeState(WALL_GRAB);
+            }
+
+            return;
+        }
+    }
+
+    void stJumpDownEnd()
     {
 
+    }
+
+    #endregion
+
+    #region JUMP_END
+
+    float accJumpEndTime = 0;
+    public float JumpEndTime = 0;
+
+    void stJumpEndBegin()
+    {
+        accJumpEndTime = 0;
     }
 
     void stJumpEndNormal()
     {
-        m_FSM.changeState(IDLE);
+        accJumpEndTime += Time.deltaTime;
+        if (accJumpEndTime < JumpEndTime)
+            return;
 
-        
+        m_FSM.changeState(IDLE);
     }
 
     void stJumpEndEnd()
@@ -339,6 +369,11 @@ public class Movement : MonoBehaviour
         m_Anim.SetBool("Jump", false);
     }
 
+    #endregion
+
+    #endregion
+
+    #region DASH
     private float accTime;
 
     void stDashBegin()
@@ -417,6 +452,10 @@ public class Movement : MonoBehaviour
         
     }
 
+    #endregion
+
+    #region WALL_GRAB
+
     void stWallGrabBegin()
     {
         m_Anim.SetBool("WallGrab", true);
@@ -470,6 +509,10 @@ public class Movement : MonoBehaviour
         rb.gravityScale = 3;
     }
 
+    #endregion
+
+    #region WALL_JUMP
+
     void stWallJumpBegin()
     {
         m_Anim.SetBool("WallJump", true);
@@ -507,6 +550,8 @@ public class Movement : MonoBehaviour
     {
         m_Anim.SetBool("WallJump", false);
     }
+
+    #endregion
 
     void stAttackJumpBegin()
     {

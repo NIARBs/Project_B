@@ -12,6 +12,7 @@ public class Collision : MonoBehaviour
     [Space]
 
     public bool onGround;
+    public bool canJump;
     public bool onWall;
     public bool onRightWall;
     public bool onLeftWall;
@@ -61,7 +62,11 @@ public class Collision : MonoBehaviour
         RaycastHit2D hit = Physics2D.Raycast((Vector2)transform.position + bottomOffset, -1 * transform.up, bottomRay, groundLayer);
         if (hit && rb.velocity.y < 0)
         {
-            onGround = true;
+            canJump = true;
+        }
+        else
+        {
+            canJump = false;
         }
 
         onRightWall = Physics2D.OverlapCircle((Vector2)transform.position + rightOffset, collisionRadius, groundLayer);
