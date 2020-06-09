@@ -26,8 +26,7 @@ public class Movement : MonoBehaviour
     public float wallJumpControllSpeed = 30;
     public float slideSpeed = 5;
     public float wallJumpLerp = 10;
-    public float dashSpeed = 20;
-    public float dashTime = 0.3f;
+    public float friction = 0.6f;
     
     public Vector2 wallJumpDir;
 
@@ -96,8 +95,8 @@ public class Movement : MonoBehaviour
         m_FSM.SetCallback(JUMP_DOWN, stJumpDown, stJumpDownBegin, stJumpDownEnd);
         m_FSM.SetCallback(JUMP_READY, stJumpReady, stJumpReadyBegin, null);
         m_FSM.SetCallback(JUMP_END, stJumpEndNormal, stJumpEndBegin, stJumpEndEnd);
-        m_FSM.SetCallback(DASH, stDash, stDashBegin, stDashEnd);
-        m_FSM.SetCallback(JUMP_DASH, stJumpDash, stJumpDashBegin, stJumpDashEnd);
+        //m_FSM.SetCallback(DASH, stDash, stDashBegin, stDashEnd);
+        //m_FSM.SetCallback(JUMP_DASH, stJumpDash, stJumpDashBegin, stJumpDashEnd);
         m_FSM.SetCallback(WALL_GRAB, stWallGrab, stWallGrabBegin, stWallGrabEnd);
         m_FSM.SetCallback(WALL_JUMP, stWallJump, stWallJumpBegin, stWallJumpEnd);
         m_FSM.SetCallback(ATTACK_JUMP, stJumpUp, stAttackJumpBegin, stJumpEndEnd);
@@ -124,7 +123,6 @@ public class Movement : MonoBehaviour
         float yRaw = Input.GetAxisRaw("Vertical");
         Vector2 dir = new Vector2(x, y);
 
-
     }
 
     #region IDLE
@@ -149,6 +147,8 @@ public class Movement : MonoBehaviour
         {
             m_FSM.changeState(JUMP_READY);
         }
+
+        MoveCode();
     }
 
     #endregion
@@ -373,86 +373,86 @@ public class Movement : MonoBehaviour
 
     #endregion
 
-    #region DASH
-    private float accTime;
+    //#region DASH
+    //private float accTime;
 
-    void stDashBegin()
-    {
-        m_Anim.SetBool("WallJump", true);
-        accTime = 0;
-        rb.velocity = rb.velocity.normalized * dashSpeed;
-    }
+    //void stDashBegin()
+    //{
+    //    m_Anim.SetBool("WallJump", true);
+    //    accTime = 0;
+    //    rb.velocity = rb.velocity.normalized * dashSpeed;
+    //}
 
-    void stDash()
-    {
-        accTime += Time.deltaTime;
-        if(accTime >= dashTime)
-        {
-            m_FSM.changeState(WALK);
-        }
-    }
+    //void stDash()
+    //{
+    //    accTime += Time.deltaTime;
+    //    if(accTime >= dashTime)
+    //    {
+    //        m_FSM.changeState(WALK);
+    //    }
+    //}
 
-    void stDashEnd()
-    {
-        accTime = 0;
-        m_Anim.SetBool("WallJump", false);
-    }
+    //void stDashEnd()
+    //{
+    //    accTime = 0;
+    //    m_Anim.SetBool("WallJump", false);
+    //}
 
-    bool isDash = false;
+    //bool isDash = false;
 
-    void stJumpDashBegin()
-    {
-        m_Anim.SetBool("WallJump", true);
+    //void stJumpDashBegin()
+    //{
+    //    m_Anim.SetBool("WallJump", true);
 
-        float x = Input.GetAxisRaw("Horizontal");
-        float y = Input.GetAxisRaw("Vertical");
+    //    float x = Input.GetAxisRaw("Horizontal");
+    //    float y = Input.GetAxisRaw("Vertical");
 
-        Vector2 dir = new Vector2(x, y);
+    //    Vector2 dir = new Vector2(x, y);
 
-        rb.velocity = dir.normalized * dashSpeed;
+    //    rb.velocity = dir.normalized * dashSpeed;
 
-        rb.gravityScale = 0;
-        GetComponent<BetterJumping>().enabled = false;
-        accTime = 0;
-        isDash = true;
-    }
+    //    rb.gravityScale = 0;
+    //    GetComponent<BetterJumping>().enabled = false;
+    //    accTime = 0;
+    //    isDash = true;
+    //}
 
-    void RigidbodyDrag(float x)
-    {
-        rb.drag = x;
-    }
+    //void RigidbodyDrag(float x)
+    //{
+    //    rb.drag = x;
+    //}
 
-    void stJumpDash()
-    {
-        accTime += Time.deltaTime;
-        if (accTime < dashTime && isDash == false)
-            return;
+    //void stJumpDash()
+    //{
+    //    accTime += Time.deltaTime;
+    //    if (accTime < dashTime && isDash == false)
+    //        return;
 
-        if(isDash == false)
-        {
-            accTime = 0;
-            isDash = true;
-            DOVirtual.Float(14, 0, .8f, RigidbodyDrag);
-        }
+    //    if(isDash == false)
+    //    {
+    //        accTime = 0;
+    //        isDash = true;
+    //        DOVirtual.Float(14, 0, .8f, RigidbodyDrag);
+    //    }
 
-        accTime += Time.deltaTime;
-        if(accTime > 0.3)
-        {
-            rb.gravityScale = 3;
-            GetComponent<BetterJumping>().enabled = true;
-        }
+    //    accTime += Time.deltaTime;
+    //    if(accTime > 0.3)
+    //    {
+    //        rb.gravityScale = 3;
+    //        GetComponent<BetterJumping>().enabled = true;
+    //    }
 
-        if (coll.onGround)
-            m_FSM.changeState(IDLE);
-    }
+    //    if (coll.onGround)
+    //        m_FSM.changeState(IDLE);
+    //}
 
-    void stJumpDashEnd()
-    {
-        m_Anim.SetBool("WallJump", false);
+    //void stJumpDashEnd()
+    //{
+    //    m_Anim.SetBool("WallJump", false);
         
-    }
+    //}
 
-    #endregion
+    //#endregion
 
     #region WALL_GRAB
 
@@ -575,17 +575,22 @@ public class Movement : MonoBehaviour
         }
     }
 
+    Vector3 beforePos;
+
     void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.tag == "Enemy")
         {
-            if (rb.velocity.y <= 0 && transform.position.y + 1 > collision.transform.position.y)
+            if (rb.velocity.y < 0)
             {
-                TargetAttack(collision.transform);
+                Enemy enemyObject = collision.transform.GetComponent<Enemy>();
+                enemyObject.OnDamaged();
+
+                m_FSM.changeState(ATTACK_JUMP);
             }
             else
             {
-                //OnDamaged(collision.transform);
+                OnDamaged(collision.transform);
             }
         }
     }
