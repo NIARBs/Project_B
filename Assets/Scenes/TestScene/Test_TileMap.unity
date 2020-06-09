@@ -3027,7 +3027,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Material
       value: 
-      objectReference: {fileID: 6200000, guid: 97dba48c69b5d3c4a8c4f0b60af3d6b5, type: 2}
+      objectReference: {fileID: 6200000, guid: 8cb20106e02002a47975399d44662e00, type: 2}
     - target: {fileID: 3995934511970857432, guid: 50a724fdf716542e2ac14fca5f9ee29c,
         type: 3}
       propertyPath: limitEyeSightRange
@@ -3106,7 +3106,12 @@ PrefabInstance:
     - target: {fileID: 3995934511970857434, guid: 50a724fdf716542e2ac14fca5f9ee29c,
         type: 3}
       propertyPath: friction
-      value: 0.5
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3995934511970857434, guid: 50a724fdf716542e2ac14fca5f9ee29c,
+        type: 3}
+      propertyPath: knockBackRange
+      value: 0.0001
       objectReference: {fileID: 0}
     - target: {fileID: 3995934511970857438, guid: 50a724fdf716542e2ac14fca5f9ee29c,
         type: 3}
