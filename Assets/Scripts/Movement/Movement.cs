@@ -243,7 +243,7 @@ public class Movement : MonoBehaviour
 
     void stWalkEnd()
     {
-        m_Anim.SetFloat("Move", 0);
+        
     }
 
     #endregion
@@ -357,6 +357,8 @@ public class Movement : MonoBehaviour
 
     void stJumpEndNormal()
     {
+        MoveCode();
+
         float moveAxis = Input.GetAxisRaw("Horizontal");
         if (moveAxis != 0)
         {
