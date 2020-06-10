@@ -357,6 +357,13 @@ public class Movement : MonoBehaviour
 
     void stJumpEndNormal()
     {
+        float moveAxis = Input.GetAxisRaw("Horizontal");
+        if (moveAxis != 0)
+        {
+            m_FSM.changeState(WALK);
+            return;
+        }
+
         accJumpEndTime += Time.deltaTime;
         if (accJumpEndTime < JumpEndTime)
             return;
