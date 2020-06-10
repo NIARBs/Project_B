@@ -42,7 +42,7 @@ public class Enemy_Mushroomy : Enemy
         if (downRayHit.collider == null || frontRayHit.collider != null)
         {
             //Debug.Log("더이상 플랫폼이 없어요!!!");
-            //Turn();
+            Turn();
         }
     }
 
@@ -62,7 +62,7 @@ public class Enemy_Mushroomy : Enemy
     {
         nextMove *= -1;
 
-        spriteRenderer.flipX = nextMove == 1;
+        //spriteRenderer.flipX = nextMove == 1;
 
         NextFrontVec();
         //StopCoroutine("StartEnemyAI");
