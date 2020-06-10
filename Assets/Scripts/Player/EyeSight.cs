@@ -21,7 +21,8 @@ public class EyeSight : MonoBehaviour
     [SerializeField] GameObject eyeSight;
     [Tooltip ("플레이어의 머리부분 오브젝트를 넣습니다. Bone이 있을 경우, 머리에 해당되는 Bone을 넣습니다. (눈동자 움직임이 있어야 하는 경우 Head Bone 자식으로 설정)")]
     [SerializeField] GameObject headBone;
-    Transform eyeBoneR;
+    [SerializeField] GameObject leftEyeBone;
+    [SerializeField] GameObject rightEyeBone;
 
     [Header ("- 마우스 트래킹 설정")]
     [Tooltip ("플레이어 캐릭터가 마우스를 쳐다볼 것인지 설정합니다.")]
@@ -61,7 +62,6 @@ public class EyeSight : MonoBehaviour
         headLimitAngle.downRightAngle = -90.0f + limitEyeSightRange;
         headLimitAngle.downLeftAngle = 90.0f - limitEyeSightRange;
 
-        eyeBoneR = headBone.transform.GetChild(1);
         light2D = eyeSight.GetComponent<Light2D>();
 
         innerAngle = light2D.pointLightInnerAngle;
@@ -168,17 +168,19 @@ public class EyeSight : MonoBehaviour
         headBone.transform.localEulerAngles = new Vector3(0, 0, isRightFront ? -(convertToHeadAngle * 0.15f) : convertToHeadAngle * 0.15f);
 
         // 눈 회전
-        for (int idx = 0; idx < headBone.transform.childCount; ++idx)
+        leftEyeBone.transform.localEulerAngles = new Vector3(0, 0, convertToEyeAngle);
+        rightEyeBone.transform.localEulerAngles = new Vector3(0, 0, convertToEyeAngle);
+        /*for (int idx = 0; idx < headBone.transform.childCount; ++idx)
         {
             Transform eyeBone = headBone.transform.GetChild(idx);
             if (eyeBone == null || eyeBone.gameObject.activeInHierarchy == false)
                 continue;
 
             eyeBone.localEulerAngles = new Vector3(0, 0, convertToEyeAngle);
-        }
+        }*/
 
         // 시야 회전
-        if (eyeBoneR == null || eyeBoneR.gameObject.activeInHierarchy == false)
+        if (rightEyeBone == null || rightEyeBone.activeInHierarchy == false)
         {
             Debug.Log("우측 눈을 찾지 못하였습니다. (연결이 되지 않았거나, 꺼져있음)");
             return;
@@ -186,8 +188,8 @@ public class EyeSight : MonoBehaviour
 
         //eyeSight.transform.localEulerAngles = isRightFront ? -eyeBoneR.localEulerAngles : eyeBoneR.localEulerAngles;
         //eyeSight.transform.position = eyeBoneR.position;
-        eyeSight.transform.localEulerAngles = isRightFront ? -eyeBoneR.localEulerAngles - new Vector3(0f, 0f, 90f) : eyeBoneR.localEulerAngles - new Vector3(0f, 0f, 90f);
-        eyeSight.transform.position = eyeBoneR.position;
+        eyeSight.transform.localEulerAngles = isRightFront ? -rightEyeBone.transform.localEulerAngles - new Vector3(0f, 0f, 90f) : rightEyeBone.transform.localEulerAngles - new Vector3(0f, 0f, 90f);
+        eyeSight.transform.position = rightEyeBone.transform.position;
     }
 
     float ConvertToAngle(float unityAngle)
