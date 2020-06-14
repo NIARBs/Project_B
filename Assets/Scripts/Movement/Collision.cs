@@ -8,10 +8,12 @@ public class Collision : MonoBehaviour
 
     [Header("Layers")]
     public LayerMask groundLayer;
+    public LayerMask ememyLayer;
 
     [Space]
 
     public bool onGround;
+    public bool onEnemy;
     public bool canJump;
     public bool onWall;
     public bool onRightWall;
@@ -47,6 +49,8 @@ public class Collision : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        onEnemy = Physics2D.OverlapCircle((Vector2)transform.position + bottomOffset, collisionRadius, ememyLayer);
+
         onGround = Physics2D.OverlapCircle((Vector2)transform.position + bottomOffset, collisionRadius, groundLayer);
         fGroundedRemember -= Time.deltaTime;
         if (onGround)

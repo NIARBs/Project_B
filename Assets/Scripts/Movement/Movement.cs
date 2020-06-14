@@ -366,6 +366,12 @@ public class Movement : MonoBehaviour
             return;
         }
 
+        if (Input.GetButtonDown("Jump") && coll.onGround)
+        {
+            m_FSM.changeState(JUMP_READY);
+            return;
+        }
+
         accJumpEndTime += Time.deltaTime;
         if (accJumpEndTime < JumpEndTime)
             return;
@@ -495,10 +501,22 @@ public class Movement : MonoBehaviour
             return;
         }
 
-        if(false == coll.onWall || Input.GetButtonDown("Horizontal"))
+        if(false == coll.onWall)
         {
             m_FSM.changeState(IDLE);
             return;
+        }
+
+        if(coll.onLeftWall == true && Input.GetKey(KeyCode.A) == false ||
+           coll.onRightWall == true && Input.GetKey(KeyCode.D) == false)
+        {
+            m_FSM.changeState(IDLE);
+        }    
+
+        if(coll.onLeftWall == true && Input.GetKey(KeyCode.D) ||
+           coll.onRightWall == true && Input.GetKey(KeyCode.A))
+        {
+            m_FSM.changeState(IDLE);
         }
 
         bool pushingWall = false;
@@ -590,7 +608,7 @@ public class Movement : MonoBehaviour
     {
         if (collision.gameObject.tag == "Enemy")
         {
-            if (rb.velocity.y < 0)
+            if (rb.velocity.y < 0 && coll.onEnemy)
             {
                 Enemy enemyObject = collision.transform.GetComponent<Enemy>();
                 enemyObject.OnDamaged();
