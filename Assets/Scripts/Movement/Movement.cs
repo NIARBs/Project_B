@@ -70,6 +70,9 @@ public class Movement : MonoBehaviour
 
     private float accAccleration = 0;
 
+    private Vector3 beforePos;
+    private Vector3 beforeBeforePos;
+
     #region state
     private const int IDLE = 0;
     private const int WALK = 1;
@@ -117,12 +120,8 @@ public class Movement : MonoBehaviour
     {
         m_FSM.Update();
 
-        float x = Input.GetAxis("Horizontal");
-        float y = Input.GetAxis("Vertical");
-        float xRaw = Input.GetAxisRaw("Horizontal");
-        float yRaw = Input.GetAxisRaw("Vertical");
-        Vector2 dir = new Vector2(x, y);
-
+        beforeBeforePos = beforePos;
+        beforePos = transform.position;
     }
 
     #region IDLE
@@ -602,13 +601,11 @@ public class Movement : MonoBehaviour
         }
     }
 
-    Vector3 beforePos;
-
     void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.tag == "Enemy")
         {
-            if (rb.velocity.y < 0 && coll.onEnemy)
+            if (rb.velocity.y < 0 && beforeBeforePos.y > collision.transform.position.y)
             {
                 Enemy enemyObject = collision.transform.GetComponent<Enemy>();
                 enemyObject.OnDamaged();
@@ -621,6 +618,7 @@ public class Movement : MonoBehaviour
             }
         }
     }
+
 
     void OnDamaged(Transform enemy)
     {
