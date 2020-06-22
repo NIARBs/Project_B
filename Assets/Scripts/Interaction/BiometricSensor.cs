@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering.Universal;
 
 public enum EBiometricSensorState
 {
@@ -26,8 +28,23 @@ public class BiometricSensor : MonoBehaviour
     [Header ("- 인식 시간 (second)")][Tooltip ("isOnce가 true일 경우, 시야가 생체인식에 인식되는 시간을 설정합니다.")]
     [SerializeField] float recognitionTime = 2.0f;
 
+    [SerializeField] GameObject sensorLines;
+    Light2D recognitionLight2D = null;
+
     private bool isActive = false;
     private bool isReverse = false;
+
+    void Awake()
+    {
+        GameObject recognitionLight = this.transform.GetChild(0).gameObject;
+        recognitionLight2D = recognitionLight.GetComponent<Light2D>();
+
+        for (int idx = 0; idx < sensorLines.transform.childCount; ++idx)
+        {
+            sensorLines.transform.GetChild(idx).GetComponent<Light2D>().intensity = 0.0f;
+        }
+
+    }
 
     void Start()
     {
@@ -48,6 +65,11 @@ public class BiometricSensor : MonoBehaviour
 
     void ProcessActionTarget()
     {
+        for(int idx = 0; idx < sensorLines.transform.childCount; ++idx)
+        {
+            sensorLines.transform.GetChild(idx).GetComponent<Light2D>().intensity = 1.0f;
+        }
+
         switch (state)
         {
             case EBiometricSensorState.DoorOpen:
@@ -97,6 +119,7 @@ public class BiometricSensor : MonoBehaviour
         // 인식 완료하기 전에 생체인식 범위에서 빠져나가면 취소됨
         if(!isActive)
         {
+            recognitionLight2D.intensity = 0.0f;
             Debug.Log("인식실패");
             StopCoroutine("StartCheckPlayer");
         }
@@ -114,9 +137,12 @@ public class BiometricSensor : MonoBehaviour
     IEnumerator StartCheckPlayer()
     {
         float time = recognitionTime;
+        float incIntensity = 2.0f / recognitionTime * 0.1f;
         while(time > 0.0f)
         {
             time -= 0.1f;
+
+            recognitionLight2D.intensity += incIntensity;
             yield return new WaitForSeconds(0.1f);
         }
 
