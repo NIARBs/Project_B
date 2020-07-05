@@ -4,10 +4,17 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] float moveDistance = 10.0f;
+    [SerializeField] private float accelerationTime;
+    [SerializeField] private float deaccelerationTime;
+    [SerializeField] private float moveDistance;
 
-    Rigidbody2D rigid;
+    private float acceleration;
+    private float deacceleration;
+    private float maxSpeed;
 
+    protected Rigidbody2D rigid;
+
+    /*
     int VerticalPositionOrigin;     // 점프 시작시 위치
     int VerticalPosition;           // 현재 위치
     int VerticalSpeed;              // 속도
@@ -38,6 +45,7 @@ public class PlayerMovement : MonoBehaviour
     }
 
     MovementState CurrentState = MovementState.OnGround;
+    */
 
     // Start is called before the first frame update
     void Start()
@@ -48,10 +56,12 @@ public class PlayerMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        /*
         if(Input.GetButtonDown("Jump"))
         {
             CurrentState = MovementState.Jumping;
         }
+        */
     }
 
     void FixedUpdate()
@@ -71,11 +81,12 @@ public class PlayerMovement : MonoBehaviour
         {
             moveVelocity = Vector3.right;
         }
+        Debug.Log(moveVelocity);
 
         transform.position += moveVelocity * moveDistance * Time.deltaTime;
     }
 
-
+    /*
     public void ResetParam(int initVerticalPos)
     {
         VerticalSpeed = 0;
@@ -200,4 +211,5 @@ public class PlayerMovement : MonoBehaviour
             }
         }
     }
+    */
 }
