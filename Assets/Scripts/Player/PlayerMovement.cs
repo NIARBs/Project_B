@@ -8,20 +8,25 @@ public class PlayerMovement : MonoBehaviour
     public enum MovementState
     {
         OnGround,
-        Jumping
+        Jumping,
+        Falling
     }
 
-    private MovementState currentState = MovementState.OnGround;
+    public MovementState currentState = MovementState.OnGround;
 
     [Range(0, 100)]
     [SerializeField] private float maxSpeed;
     private float acceleration = 0.01f;
     private float deacceleration = 0.3f;
     private float turnSpeed = 0.3f;
+    private float moveVelocity;
 
+    [SerializeField] private Transform feetPos;
+    [SerializeField] private LayerMask groundMask;
+    [SerializeField] private float checkFeetRadius;
     [SerializeField] private float jumpPower;
-    private float jumpTimer = 0.0f;
-    private float jumpTimeLimit = 0.1f;
+    [SerializeField] private float jumpTime;
+    private float jumpTimeCounter;
 
     protected Rigidbody2D rigid;
 
@@ -34,7 +39,9 @@ public class PlayerMovement : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        //Jump();
+        CheckMovementState();
+
+        Jump();
     }
 
     private void FixedUpdate()
@@ -44,19 +51,21 @@ public class PlayerMovement : MonoBehaviour
 
     private void Move()
     {
-        float moveVelocity = rigid.velocity.x;
-        moveVelocity += Input.GetAxisRaw("Horizontal");
+        moveVelocity = rigid.velocity.x + Input.GetAxisRaw("Horizontal");
 
         if(Mathf.Abs(Input.GetAxisRaw("Horizontal")) < 0.001f)
         {
+            Debug.Log("deaccel");
             moveVelocity *= Mathf.Pow(deacceleration, Time.deltaTime * 10f);
         }
         else if(Mathf.Sign(Input.GetAxisRaw("Horizontal")) != Mathf.Sign(moveVelocity))
         {
+            Debug.Log("Turn");
             moveVelocity *= Mathf.Pow(turnSpeed, Time.deltaTime * 10f);
         }
         else
         {
+            Debug.Log("accel");
             moveVelocity *= Mathf.Pow(maxSpeed * acceleration, Time.deltaTime * 10f);
         }
 
@@ -65,29 +74,46 @@ public class PlayerMovement : MonoBehaviour
 
     private void Jump()
     {
-        if(Input.GetButtonDown("Jump"))
+        if(currentState == MovementState.OnGround && Input.GetButtonDown("Jump"))
         {
             currentState = MovementState.Jumping;
+            jumpTimeCounter = jumpTime;
+
+            rigid.velocity = new Vector2(moveVelocity, jumpPower);
         }
 
-        if(Input.GetButtonUp("Jump"))
+        if(currentState == MovementState.Jumping)
         {
-            if (rigid.velocity.y > 0)
+            if(Input.GetButton("Jump"))
             {
-                currentState = MovementState.OnGround;
-                rigid.velocity = new Vector2(rigid.velocity.x, rigid.velocity.y * 0.5f);
+                if(jumpTimeCounter > 0)
+                {
+                    rigid.velocity = new Vector2(moveVelocity, jumpPower);
+                    jumpTimeCounter -= Time.deltaTime;
+                }
+            }
+            else
+            {
+                currentState = MovementState.Falling;
             }
         }
 
-        if(Input.GetButton("Jump") == false || jumpTimer >= jumpTimeLimit)
+        Debug.Log(rigid.velocity);
+    }
+
+    private void CheckMovementState()
+    {
+        if(Physics2D.OverlapCircle(feetPos.position, checkFeetRadius, groundMask))
         {
-
-            return;
+            currentState = MovementState.OnGround;
         }
-
-        //rigid.velocity = Vector2.zero;
-        rigid.AddForce(Vector2.up * jumpPower * ((jumpTimer * 10) + 1f), ForceMode2D.Impulse);
-
-        jumpTimer += Time.deltaTime;
+        else if(rigid.velocity.y <= 0)
+        {
+            currentState = MovementState.Falling;
+        }
+        else
+        {
+            currentState = MovementState.Jumping;
+        }
     }
 }
