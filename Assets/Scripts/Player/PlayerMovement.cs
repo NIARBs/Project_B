@@ -19,7 +19,7 @@ public class PlayerMovement : MonoBehaviour
     private float acceleration = 0.01f;
     private float deacceleration = 0.3f;
     private float turnSpeed = 0.3f;
-    private float moveVelocity;
+    private float moveVelocityX;
 
     [SerializeField] private Transform feetPos;
     [SerializeField] private LayerMask groundMask;
@@ -51,25 +51,32 @@ public class PlayerMovement : MonoBehaviour
 
     private void Move()
     {
-        moveVelocity = rigid.velocity.x + Input.GetAxisRaw("Horizontal");
+        moveVelocityX = rigid.velocity.x + Input.GetAxisRaw("Horizontal");
 
         if(Mathf.Abs(Input.GetAxisRaw("Horizontal")) < 0.001f)
         {
             Debug.Log("deaccel");
-            moveVelocity *= Mathf.Pow(deacceleration, Time.deltaTime * 10f);
+            moveVelocityX *= Mathf.Pow(deacceleration, Time.deltaTime * 10f);
         }
-        else if(Mathf.Sign(Input.GetAxisRaw("Horizontal")) != Mathf.Sign(moveVelocity))
+        else if(Mathf.Sign(Input.GetAxisRaw("Horizontal")) != Mathf.Sign(moveVelocityX))
         {
             Debug.Log("Turn");
-            moveVelocity *= Mathf.Pow(turnSpeed, Time.deltaTime * 10f);
+            moveVelocityX *= Mathf.Pow(turnSpeed, Time.deltaTime * 10f);
         }
         else
         {
             Debug.Log("accel");
-            moveVelocity *= Mathf.Pow(maxSpeed * acceleration, Time.deltaTime * 10f);
+
+            moveVelocityX *= Mathf.Pow(maxSpeed * acceleration, Time.deltaTime * 10f);
+            Debug.Log("maxSpeed : " + maxSpeed);
+            Debug.Log("acceleration : " + acceleration);
+            Debug.Log("deltaTime : " + (Time.deltaTime * 10f));
+            Debug.Log("moveVelocityX : " + moveVelocityX);
         }
 
-        rigid.velocity = new Vector2(moveVelocity, rigid.velocity.y);
+        rigid.velocity = new Vector2(moveVelocityX, rigid.velocity.y);
+
+        Debug.Log(rigid.velocity);
     }
 
     private void Jump()
@@ -79,26 +86,26 @@ public class PlayerMovement : MonoBehaviour
             currentState = MovementState.Jumping;
             jumpTimeCounter = jumpTime;
 
-            rigid.velocity = new Vector2(moveVelocity, jumpPower);
+            rigid.velocity = new Vector2(moveVelocityX, jumpPower);
         }
 
-        if(currentState == MovementState.Jumping)
+        if(currentState == MovementState.Jumping && Input.GetButton("Jump"))
         {
-            if(Input.GetButton("Jump"))
+            if(jumpTimeCounter > 0)
             {
-                if(jumpTimeCounter > 0)
-                {
-                    rigid.velocity = new Vector2(moveVelocity, jumpPower);
-                    jumpTimeCounter -= Time.deltaTime;
-                }
+                rigid.velocity = new Vector2(moveVelocityX, jumpPower);
+                jumpTimeCounter -= Time.deltaTime;
             }
-            else
+                
             {
                 currentState = MovementState.Falling;
             }
         }
-
-        Debug.Log(rigid.velocity);
+        
+        if(Input.GetButtonUp("Jump"))
+        {
+            currentState = MovementState.Falling;
+        }
     }
 
     private void CheckMovementState()
