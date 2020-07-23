@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
@@ -12,21 +13,31 @@ public class PlayerMovement : MonoBehaviour
         Falling
     }
 
+    [Header("컴포넌트")]
+    public Animator animator;
+    [SerializeField] private Transform feetPos;
+    [SerializeField] private LayerMask groundLayer;
+
+    [Header("움직임")]
     public MovementState currentState = MovementState.OnGround;
 
     [Range(0, 100)]
-    [SerializeField] private float maxSpeed;
+    [SerializeField] private float moveSpeed;
+    [SerializeField] private Vector2 direction;
     private float acceleration = 0.01f;
     private float deacceleration = 0.3f;
     private float turnSpeed = 0.3f;
-    private float moveVelocityX;
-
-    [SerializeField] private Transform feetPos;
-    [SerializeField] private LayerMask groundMask;
+    private float moveVelocity;
     [SerializeField] private float checkFeetRadius;
-    [SerializeField] private float jumpPower;
-    [SerializeField] private float jumpTime;
-    private float jumpTimeCounter;
+
+    [Header("점프")]
+    [SerializeField] private float jumpSpeed;
+    private float jumpDelay = 0.25f;
+    private float jumpTimer;
+
+    [Header("물리")]
+    public float gravity = 1f;
+    public float fallMultiplier = 5f;
 
     protected Rigidbody2D rigid;
 
@@ -39,82 +50,100 @@ public class PlayerMovement : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
+        direction = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+
         CheckMovementState();
 
-        Jump();
+        if(Input.GetButtonDown("Jump"))
+        {
+            jumpTimer = Time.time + jumpDelay;
+        }
     }
 
     private void FixedUpdate()
     {
-        Move();
+        Move(direction.x);
+
+        if(jumpTimer > Time.time && currentState == MovementState.OnGround)
+        {
+            Jump();
+        }
+
+        ModifyPhysics();
     }
 
-    private void Move()
+    private void Move(float horizontal)
     {
-        moveVelocityX = rigid.velocity.x + Input.GetAxisRaw("Horizontal");
+        moveVelocity = rigid.velocity.x + horizontal;
 
-        if(Mathf.Abs(Input.GetAxisRaw("Horizontal")) < 0.001f)
+        if(Mathf.Abs(horizontal) < 0.001f)
         {
             Debug.Log("deaccel");
-            moveVelocityX *= Mathf.Pow(deacceleration, Time.deltaTime * 10f);
+            moveVelocity *= Mathf.Pow(deacceleration, Time.deltaTime * 10f);
         }
-        else if(Mathf.Sign(Input.GetAxisRaw("Horizontal")) != Mathf.Sign(moveVelocityX))
+        else if(Mathf.Sign(horizontal) != Mathf.Sign(moveVelocity))
         {
             Debug.Log("Turn");
-            moveVelocityX *= Mathf.Pow(turnSpeed, Time.deltaTime * 10f);
+            moveVelocity *= Mathf.Pow(turnSpeed, Time.deltaTime * 10f);
         }
         else
         {
             Debug.Log("accel");
 
-            moveVelocityX *= Mathf.Pow(maxSpeed * acceleration, Time.deltaTime * 10f);
-            Debug.Log("maxSpeed : " + maxSpeed);
+            moveVelocity *= Mathf.Pow(moveSpeed * acceleration, Time.deltaTime * 10f);
+            Debug.Log("maxSpeed : " + moveSpeed);
             Debug.Log("acceleration : " + acceleration);
             Debug.Log("deltaTime : " + (Time.deltaTime * 10f));
-            Debug.Log("moveVelocityX : " + moveVelocityX);
         }
 
-        rigid.velocity = new Vector2(moveVelocityX, rigid.velocity.y);
+        rigid.velocity = new Vector2(moveVelocity, rigid.velocity.y);
+
+        
 
         Debug.Log(rigid.velocity);
+
+        // 애니메이션 준비
+        // animator.SetFloat("move", Mathf.Abs(rb.velocity.x));
+    }
+
+    private void ModifyPhysics()
+    {
+        if(currentState == MovementState.OnGround)
+        {
+            rigid.gravityScale = 0f;
+        }
+        else
+        {
+            rigid.gravityScale = gravity;
+            if(rigid.velocity.y < 0)
+            {
+                rigid.gravityScale = gravity * fallMultiplier;
+            }
+            else if(rigid.velocity.y > 0 && !Input.GetButton("Jump"))
+            {
+                rigid.gravityScale = gravity * (fallMultiplier * 0.6f);
+            }
+            else if(rigid.velocity.y > 0 && Input.GetButton("Jump"))
+            {
+                rigid.gravityScale = gravity * (fallMultiplier * 0.4f);
+            }
+        }
     }
 
     private void Jump()
     {
-        if(currentState == MovementState.OnGround && Input.GetButtonDown("Jump"))
-        {
-            currentState = MovementState.Jumping;
-            jumpTimeCounter = jumpTime;
-
-            rigid.velocity = new Vector2(moveVelocityX, jumpPower);
-        }
-
-        if(currentState == MovementState.Jumping && Input.GetButton("Jump"))
-        {
-            if(jumpTimeCounter > 0)
-            {
-                rigid.velocity = new Vector2(moveVelocityX, jumpPower);
-                jumpTimeCounter -= Time.deltaTime;
-            }
-                
-            {
-                currentState = MovementState.Falling;
-            }
-        }
-        
-        if(Input.GetButtonUp("Jump"))
-        {
-            currentState = MovementState.Falling;
-        }
+        rigid.velocity = new Vector2(rigid.velocity.x, 0);
+        rigid.AddForce(Vector2.up * jumpSpeed, ForceMode2D.Impulse);
+        jumpTimer = 0f;
     }
 
     private void CheckMovementState()
     {
-        if(Physics2D.OverlapCircle(feetPos.position, checkFeetRadius, groundMask))
+        if(Physics2D.OverlapCircle(feetPos.position, checkFeetRadius, groundLayer))
         {
             currentState = MovementState.OnGround;
         }
-        else if(rigid.velocity.y <= 0)
+        else if(rigid.velocity.y < 0)
         {
             currentState = MovementState.Falling;
         }
