@@ -10,11 +10,18 @@ public class PlayerMovement : MonoBehaviour
     {
         OnGround,
         Jumping,
+        TouchingWall,
+        WallSliding,
         Falling
     }
 
+    private bool canMove = true;
+    public bool isFacingRight = true;
+    private int facingDirection = 1;
+
     [Header("컴포넌트")]
     public Animator animator;
+    [SerializeField] private Transform wallCheck;
     [SerializeField] private Transform feetPos;
     [SerializeField] private LayerMask groundLayer;
 
@@ -27,13 +34,20 @@ public class PlayerMovement : MonoBehaviour
     private float acceleration = 0.01f;
     private float deacceleration = 0.3f;
     private float turnSpeed = 0.3f;
-    private float moveVelocity;
+    private float moveVelocityX;
+    private float moveVelocityY;
     [SerializeField] private float checkFeetRadius;
 
     [Header("점프")]
-    [SerializeField] private float jumpSpeed;
+    [SerializeField] private float jumpPower;
     private float jumpDelay = 0.25f;
     private float jumpTimer;
+
+    [Header("벽점프")]
+    [SerializeField] private float checkWallDistance;
+    [SerializeField] private float wallSlideSpeed;
+    [SerializeField] private float wallJumpPower;
+    [SerializeField] private Vector2 wallJumpDirection;
 
     [Header("물리")]
     public float gravity = 1f;
@@ -62,11 +76,18 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        Move(direction.x);
+        if(canMove)
+        {
+            Move(direction.x);
+        }
 
         if(jumpTimer > Time.time && currentState == MovementState.OnGround)
         {
             Jump();
+        }
+        else if(jumpTimer > Time.time && (currentState == MovementState.WallSliding || currentState == MovementState.TouchingWall))
+        {
+            WallJump();
         }
 
         ModifyPhysics();
@@ -74,29 +95,43 @@ public class PlayerMovement : MonoBehaviour
 
     private void Move(float horizontal)
     {
-        moveVelocity = rigid.velocity.x + horizontal;
+        moveVelocityX = rigid.velocity.x + horizontal;
+        moveVelocityY = rigid.velocity.y;
+
+        if(currentState == MovementState.WallSliding)
+        {
+            if(rigid.velocity.y < -wallSlideSpeed)
+            {
+                moveVelocityY = -wallSlideSpeed;
+            }
+        }
+
+        if((moveVelocityX < 0 && isFacingRight) || (moveVelocityX > 0 && !isFacingRight))
+        {
+            Flip();
+        }
 
         if(Mathf.Abs(horizontal) < 0.001f)
         {
-            Debug.Log("deaccel");
-            moveVelocity *= Mathf.Pow(deacceleration, Time.deltaTime * 10f);
+            Debug.Log("[MoveStateChange] Deaccel");
+            moveVelocityX *= Mathf.Pow(deacceleration, Time.deltaTime * 10f);
         }
-        else if(Mathf.Sign(horizontal) != Mathf.Sign(moveVelocity))
+        else if(Mathf.Sign(horizontal) != Mathf.Sign(moveVelocityX))
         {
-            Debug.Log("Turn");
-            moveVelocity *= Mathf.Pow(turnSpeed, Time.deltaTime * 10f);
+            Debug.Log("[MoveStateChange] Turn");
+            moveVelocityX *= Mathf.Pow(turnSpeed, Time.deltaTime * 10f);
         }
         else
         {
-            Debug.Log("accel");
+            Debug.Log("[MoveStateChange] Accel");
 
-            moveVelocity *= Mathf.Pow(moveSpeed * acceleration, Time.deltaTime * 10f);
+            moveVelocityX *= Mathf.Pow(moveSpeed * acceleration, Time.deltaTime * 10f);
             Debug.Log("maxSpeed : " + moveSpeed);
             Debug.Log("acceleration : " + acceleration);
             Debug.Log("deltaTime : " + (Time.deltaTime * 10f));
         }
 
-        rigid.velocity = new Vector2(moveVelocity, rigid.velocity.y);
+        rigid.velocity = new Vector2(moveVelocityX, moveVelocityY);
 
         
 
@@ -111,30 +146,48 @@ public class PlayerMovement : MonoBehaviour
         if(currentState == MovementState.OnGround)
         {
             rigid.gravityScale = 0f;
+
+            return;
         }
-        else
+
+        rigid.gravityScale = gravity;
+        if(rigid.velocity.y < 0)
         {
-            rigid.gravityScale = gravity;
-            if(rigid.velocity.y < 0)
-            {
-                rigid.gravityScale = gravity * fallMultiplier;
-            }
-            else if(rigid.velocity.y > 0 && !Input.GetButton("Jump"))
-            {
-                rigid.gravityScale = gravity * (fallMultiplier * 0.6f);
-            }
-            else if(rigid.velocity.y > 0 && Input.GetButton("Jump"))
-            {
-                rigid.gravityScale = gravity * (fallMultiplier * 0.4f);
-            }
+            rigid.gravityScale = gravity * fallMultiplier;
+        }
+        else if(rigid.velocity.y > 0 && !Input.GetButton("Jump"))
+        {
+            rigid.gravityScale = gravity * (fallMultiplier * 0.6f);
+        }
+        else if(rigid.velocity.y > 0 && Input.GetButton("Jump"))
+        {
+            rigid.gravityScale = gravity * (fallMultiplier * 0.4f);
         }
     }
 
     private void Jump()
     {
         rigid.velocity = new Vector2(rigid.velocity.x, 0);
-        rigid.AddForce(Vector2.up * jumpSpeed, ForceMode2D.Impulse);
+        rigid.AddForce(Vector2.up * jumpPower, ForceMode2D.Impulse);
         jumpTimer = 0f;
+    }
+
+    private void WallJump()
+    {
+        Debug.Log("벽점");
+        Vector2 force = new Vector2(wallJumpPower * wallJumpDirection.x * -facingDirection, wallJumpPower * wallJumpDirection.y);
+        rigid.velocity = Vector2.zero;
+        rigid.AddForce(force, ForceMode2D.Impulse);
+        StartCoroutine("StopMove");
+    }
+
+    IEnumerator StopMove()
+    {
+        canMove = false;
+
+        yield return new WaitForSeconds(0.3f);
+
+        canMove = true;
     }
 
     private void CheckMovementState()
@@ -142,6 +195,16 @@ public class PlayerMovement : MonoBehaviour
         if(Physics2D.OverlapCircle(feetPos.position, checkFeetRadius, groundLayer))
         {
             currentState = MovementState.OnGround;
+        }
+        else if ((currentState == MovementState.TouchingWall || currentState == MovementState.WallSliding) &&
+                currentState != MovementState.OnGround && rigid.velocity.y < 0 && direction.x != 0)
+        {
+            currentState = MovementState.WallSliding;
+        }
+        else if (currentState != MovementState.OnGround &&
+                Physics2D.Raycast(wallCheck.position, isFacingRight ? Vector2.right : Vector2.left, checkWallDistance, groundLayer))
+        {
+            currentState = MovementState.TouchingWall;
         }
         else if(rigid.velocity.y < 0)
         {
@@ -151,5 +214,30 @@ public class PlayerMovement : MonoBehaviour
         {
             currentState = MovementState.Jumping;
         }
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        if(isFacingRight)
+        {
+            Gizmos.DrawLine(wallCheck.position, new Vector3(wallCheck.position.x + checkWallDistance, wallCheck.position.y, wallCheck.position.z));
+        }
+        else
+        {
+            Gizmos.DrawLine(wallCheck.position, new Vector3(wallCheck.position.x - checkWallDistance, wallCheck.position.y, wallCheck.position.z));
+        }
+    }
+
+    private void Flip()
+    {
+        // 슬라이딩 중에 반대 방향으로 이동할 경우 위치 변경
+        if(currentState == MovementState.WallSliding)
+        {
+            currentState = MovementState.Falling;
+        }
+
+        facingDirection *= -1;
+        isFacingRight = !isFacingRight;
     }
 }
