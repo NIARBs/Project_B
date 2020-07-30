@@ -81,7 +81,9 @@ public class PlayerMovement : MonoBehaviour
             Move(direction.x);
         }
 
-        if(jumpTimer > Time.time && currentState == MovementState.OnGround)
+        ModifyPhysics();
+
+        if (jumpTimer > Time.time && currentState == MovementState.OnGround)
         {
             Jump();
         }
@@ -89,8 +91,6 @@ public class PlayerMovement : MonoBehaviour
         {
             WallJump();
         }
-
-        ModifyPhysics();
     }
 
     private void Move(float horizontal)
@@ -113,22 +113,18 @@ public class PlayerMovement : MonoBehaviour
 
         if(Mathf.Abs(horizontal) < 0.001f)
         {
-            Debug.Log("[MoveStateChange] Deaccel");
+            //Debug.Log("[MoveStateChange] Deaccel");
             moveVelocityX *= Mathf.Pow(deacceleration, Time.deltaTime * 10f);
         }
         else if(Mathf.Sign(horizontal) != Mathf.Sign(moveVelocityX))
         {
-            Debug.Log("[MoveStateChange] Turn");
+            //Debug.Log("[MoveStateChange] Turn");
             moveVelocityX *= Mathf.Pow(turnSpeed, Time.deltaTime * 10f);
         }
         else
         {
-            Debug.Log("[MoveStateChange] Accel");
-
+            //Debug.Log("[MoveStateChange] Accel");
             moveVelocityX *= Mathf.Pow(moveSpeed * acceleration, Time.deltaTime * 10f);
-            Debug.Log("maxSpeed : " + moveSpeed);
-            Debug.Log("acceleration : " + acceleration);
-            Debug.Log("deltaTime : " + (Time.deltaTime * 10f));
         }
 
         rigid.velocity = new Vector2(moveVelocityX, moveVelocityY);
@@ -163,6 +159,8 @@ public class PlayerMovement : MonoBehaviour
         {
             rigid.gravityScale = gravity * (fallMultiplier * 0.4f);
         }
+
+        Debug.Log("Change Gravity: " + rigid.gravityScale);
     }
 
     private void Jump()
