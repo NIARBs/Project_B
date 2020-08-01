@@ -15,12 +15,13 @@ public class PlayerMovement : MonoBehaviour
         Falling
     }
 
-    private bool canMove = true;
-    public bool isFacingRight = true;
+    public bool isFacingRight = false;
     private int facingDirection = 1;
 
     [Header("컴포넌트")]
     public Animator animator;
+    [Tooltip("플레이어의 머리부분 오브젝트를 넣습니다. Bone이 있을 경우, 머리에 해당되는 Bone을 넣습니다. (눈동자 움직임이 있어야 하는 경우 Head Bone 자식으로 설정)")]
+    [SerializeField] GameObject neckBone;
     [SerializeField] private Transform wallCheck;
     [SerializeField] private Transform feetPos;
     [SerializeField] private LayerMask groundLayer;
@@ -31,6 +32,7 @@ public class PlayerMovement : MonoBehaviour
     [Range(0, 100)]
     [SerializeField] private float moveSpeed;
     [SerializeField] private Vector2 direction;
+    private bool canMove = true;
     private float acceleration = 0.01f;
     private float deacceleration = 0.3f;
     private float turnSpeed = 0.3f;
@@ -133,8 +135,7 @@ public class PlayerMovement : MonoBehaviour
 
         Debug.Log(rigid.velocity);
 
-        // 애니메이션 준비
-        // animator.SetFloat("move", Mathf.Abs(rb.velocity.x));
+        animator.SetFloat("Move", Mathf.Abs(moveVelocityX));
     }
 
     private void ModifyPhysics()
@@ -193,11 +194,15 @@ public class PlayerMovement : MonoBehaviour
         if(Physics2D.OverlapCircle(feetPos.position, checkFeetRadius, groundLayer))
         {
             currentState = MovementState.OnGround;
+            animator.SetBool("Jump", false);
+            animator.SetBool("Falling", false);
+            animator.SetBool("Sliding", false);
         }
         else if ((currentState == MovementState.TouchingWall || currentState == MovementState.WallSliding) &&
                 currentState != MovementState.OnGround && rigid.velocity.y < 0 && direction.x != 0)
         {
             currentState = MovementState.WallSliding;
+            animator.SetBool("Sliding", true);
         }
         else if (currentState != MovementState.OnGround &&
                 Physics2D.Raycast(wallCheck.position, isFacingRight ? Vector2.right : Vector2.left, checkWallDistance, groundLayer))
@@ -207,10 +212,12 @@ public class PlayerMovement : MonoBehaviour
         else if(rigid.velocity.y < 0)
         {
             currentState = MovementState.Falling;
+            animator.SetBool("Falling", true);
         }
         else
         {
             currentState = MovementState.Jumping;
+            animator.SetBool("Jump", true);
         }
     }
 
@@ -237,5 +244,14 @@ public class PlayerMovement : MonoBehaviour
 
         facingDirection *= -1;
         isFacingRight = !isFacingRight;
+        transform.localScale = new Vector3(facingDirection, transform.localScale.y, transform.localScale.z);
+    }
+
+    void TurnHead()
+    {
+        if (neckBone.gameObject.activeInHierarchy)
+        {
+            neckBone.transform.localScale = new Vector3(neckBone.transform.localScale.x, -neckBone.transform.localScale.y, 1);
+        }
     }
 }
