@@ -3864,7 +3864,13 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1970877837}
   m_PrefabAsset: {fileID: 0}
---- !u!43 &1973846862
+--- !u!1 &1977344409 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6326283270385319926, guid: 0e2bfad9a35170340be5811f136f9de3,
+    type: 3}
+  m_PrefabInstance: {fileID: 1970877837}
+  m_PrefabAsset: {fileID: 0}
+--- !u!43 &2010424679
 Mesh:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -4027,12 +4033,6 @@ Mesh:
     offset: 0
     size: 0
     path: 
---- !u!1 &1977344409 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6326283270385319926, guid: 0e2bfad9a35170340be5811f136f9de3,
-    type: 3}
-  m_PrefabInstance: {fileID: 1970877837}
-  m_PrefabAsset: {fileID: 0}
 --- !u!95 &2146700277 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 4922673494692042605, guid: 0e2bfad9a35170340be5811f136f9de3,
