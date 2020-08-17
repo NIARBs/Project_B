@@ -190,21 +190,32 @@ public class PlayerMovement : MonoBehaviour
 
     private void CheckMovementState()
     {
-        if(Physics2D.OverlapCircle(feetPos.position, checkFeetRadius, groundLayer))
+        bool isOnGround = Physics2D.OverlapCircle(feetPos.position, checkFeetRadius, groundLayer);
+        bool isTouchingWall = Physics2D.Raycast(wallCheck.position, isFacingRight ? Vector2.right : Vector2.left, checkWallDistance, groundLayer);
+        if(isOnGround)
         {
             currentState = MovementState.OnGround;
             animator.SetBool("Jump", false);
             animator.SetBool("Falling", false);
             animator.SetBool("Sliding", false);
         }
-        else if ((currentState == MovementState.TouchingWall || currentState == MovementState.WallSliding) &&
-                currentState != MovementState.OnGround && rigid.velocity.y < 0 && direction.x != 0)
+        else if((currentState == MovementState.TouchingWall || currentState == MovementState.WallSliding) &&
+               currentState != MovementState.OnGround && rigid.velocity.y < 0 && direction.x != 0)
         {
+            // 슬라이딩 중에 벽이 사라지면 떨어짐
+            if(!isTouchingWall)
+            {
+                currentState = MovementState.Falling;
+                animator.SetBool("Sliding", false);
+                animator.SetBool("Falling", true);
+                return;
+            }
+
             currentState = MovementState.WallSliding;
             animator.SetBool("Sliding", true);
         }
-        else if (currentState != MovementState.OnGround &&
-                Physics2D.Raycast(wallCheck.position, isFacingRight ? Vector2.right : Vector2.left, checkWallDistance, groundLayer))
+        else if(currentState != MovementState.OnGround &&
+               isTouchingWall)
         {
             currentState = MovementState.TouchingWall;
         }
@@ -239,6 +250,8 @@ public class PlayerMovement : MonoBehaviour
         if(currentState == MovementState.WallSliding)
         {
             currentState = MovementState.Falling;
+            animator.SetBool("Sliding", false);
+            animator.SetBool("Falling", true);
         }
 
         facingDirection *= -1;
