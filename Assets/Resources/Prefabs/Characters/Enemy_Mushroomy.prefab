@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 5059273851925207338}
   - component: {fileID: 2647825647780987824}
   - component: {fileID: 6187116552997394895}
-  - component: {fileID: 341839427}
+  - component: {fileID: 1728790625967550575}
   m_Layer: 11
   m_Name: Enemy_Mushroomy
   m_TagString: Enemy
@@ -77,8 +77,8 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
---- !u!70 &341839427
-CapsuleCollider2D:
+--- !u!61 &1728790625967550575
+BoxCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -88,11 +88,21 @@ CapsuleCollider2D:
   m_Density: 1
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_UsedByEffector: 1
+  m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}
-  m_Size: {x: 0.8, y: 0.8}
-  m_Direction: 0
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1}
+  m_EdgeRadius: 0
 --- !u!1001 &1672496380625904170
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -3,30 +3,31 @@ using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine;
 
-public class Enemy_Mushroomy : Enemy
+public class EnemyMushroomy : Enemy
 {
-    [SerializeField] Vector3 nextFrontVec;
+    [SerializeField] private Vector3 nextFrontVec;
 
-    [SerializeField] float minNextMoveStateTime = 2.0f;
-    [SerializeField] float maxNextMoveStateTime = 5.0f;
-    float nextMoveStateTime;
+    [SerializeField] private float minNextMoveStateTime = 2.0f;
+    [SerializeField] private float maxNextMoveStateTime = 5.0f;
+    private float nextMoveStateTime;
 
-    void Awake()
+    private void Awake()
     {
         rigid = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         capsuleCollider = GetComponent<CapsuleCollider2D>();
     }
 
-    void Start()
+    private void Start()
     {
         CheckEnemyType(EEnemyType.Mushroomy);
 
         //StartCoroutine("StartEnemyAI");
+        GetComponent<Animator>().SetBool("Move", true);
         nextMove = -1;
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
         //움직임
         rigid.velocity = new Vector2(nextMove * moveSpeed, rigid.velocity.y);
@@ -39,39 +40,39 @@ public class Enemy_Mushroomy : Enemy
 
         RaycastHit2D downRayHit = Physics2D.Raycast(downVec, Vector3.down, 1, LayerMask.GetMask("Ground"));
         RaycastHit2D frontRayHit = Physics2D.Raycast(frontVec, nextFrontVec, 0.4f, LayerMask.GetMask("Ground"));
-        if (downRayHit.collider == null || frontRayHit.collider != null)
+        if(downRayHit.collider == null || frontRayHit.collider != null)
         {
             //Debug.Log("더이상 플랫폼이 없어요!!!");
             Turn();
         }
     }
 
-    void NextFrontVec()
+    private void NextFrontVec()
     {
-        if (nextMove == 1)
+        if(nextMove == 1)
         {
             nextFrontVec = Vector3.right;
         }
-        else if (nextMove == -1)
+        else if(nextMove == -1)
         {
             nextFrontVec = Vector3.left;
         }
     }
 
-    void Turn()
+    private void Turn()
     {
         nextMove *= -1;
 
-        //spriteRenderer.flipX = nextMove == 1;
+        spriteRenderer.flipX = nextMove == 1;
 
         NextFrontVec();
         //StopCoroutine("StartEnemyAI");
         //StartCoroutine("StartEnemyAI");
     }
 
-    IEnumerator StartEnemyAI()
+    private IEnumerator StartEnemyAI()
     {
-        while (true)
+        while(true)
         {
             nextMove = Random.Range(-1, 2);
 
