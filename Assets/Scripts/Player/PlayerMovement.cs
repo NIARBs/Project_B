@@ -15,13 +15,12 @@ public class PlayerMovement : MonoBehaviour
         Falling
     }
 
+    [Tooltip("게임이 시작될 때 플레이어 캐릭터가 바라보는 방향을 설정합니다.")]
     public bool isFacingRight = false;
-    private int facingDirection = 1;
+    public int facingDirection = 1;
 
     [Header("컴포넌트")]
     public Animator animator;
-    [Tooltip("플레이어의 머리부분 오브젝트를 넣습니다. Bone이 있을 경우, 머리에 해당되는 Bone을 넣습니다. (눈동자 움직임이 있어야 하는 경우 Head Bone 자식으로 설정)")]
-    [SerializeField] GameObject neckBone;
     [SerializeField] private Transform wallCheck;
     [SerializeField] private Transform feetPos;
     [SerializeField] private LayerMask groundLayer;
@@ -245,13 +244,5 @@ public class PlayerMovement : MonoBehaviour
         facingDirection *= -1;
         isFacingRight = !isFacingRight;
         transform.localScale = new Vector3(facingDirection, transform.localScale.y, transform.localScale.z);
-    }
-
-    void TurnHead()
-    {
-        if (neckBone.gameObject.activeInHierarchy)
-        {
-            neckBone.transform.localScale = new Vector3(neckBone.transform.localScale.x, -neckBone.transform.localScale.y, 1);
-        }
     }
 }

@@ -7,68 +7,74 @@ using UnityEngine.UIElements;
 
 public class EyeSight : MonoBehaviour
 {
-    struct LimitAngle
+    private struct LimitAngle
     {
         public float upRightAngle;
         public float upLeftAngle;
         public float downRightAngle;
         public float downLeftAngle;
+
+        public LimitAngle (float upRightAngle, float upLeftAngle, float downRightAngle, float downLeftAngle)
+        {
+            this.upRightAngle = upRightAngle;
+            this.upLeftAngle = upLeftAngle;
+            this.downRightAngle = downRightAngle;
+            this.downLeftAngle = downLeftAngle;
+        }
     }
 
-    [Header ("- 오브젝트 설정")]
-    [SerializeField] Animator animator;
+    [Header ("컴포넌트")]
+    [SerializeField] private Animator animator;
     [Tooltip ("플레이어의 시야 오브젝트를 넣습니다.")]
-    [SerializeField] GameObject eyeSight;
+    [SerializeField] private GameObject eyeSight;
     [Tooltip ("플레이어의 머리부분 오브젝트를 넣습니다. Bone이 있을 경우, 머리에 해당되는 Bone을 넣습니다. (눈동자 움직임이 있어야 하는 경우 Head Bone 자식으로 설정)")]
-    [SerializeField] GameObject headBone;
-    [SerializeField] GameObject leftEyeBone;
-    [SerializeField] GameObject rightEyeBone;
+    [SerializeField] private GameObject headBone;
+    [SerializeField] private GameObject leftEyeBone;
+    [SerializeField] private GameObject rightEyeBone;
+    private PlayerMovement playerMovement;
 
-    [Header ("- 마우스 트래킹 설정")]
+    [Header ("마우스 트래킹")]
     [Tooltip ("플레이어 캐릭터가 마우스를 쳐다볼 것인지 설정합니다.")]
-    [SerializeField] bool isTracking = true;
+    [SerializeField] private bool isTracking = true;
     [Tooltip ("플레이어 캐릭터가 마우스를 쳐다보는 각도를 제한합니다. 캐릭터를 기준으로 < 위(0도)와 아래(180도) +- limitEyeSightRange / 2 >")]
-    [SerializeField] float limitEyeSightRange = 50.0f;
+    [SerializeField] private float limitEyeSightRange = 50.0f;
 
-    [Header ("- 시야 설정")][Tooltip ("게임이 시작될 때 플레이어 캐릭터가 바라보는 방향을 설정합니다.")]
-    [SerializeField] bool isRightFront = true;
+    [Header ("시야")]
     [Tooltip("플레이어 캐릭터의 눈 깜빡임을 설정합니다.")]
-    [SerializeField] bool useBlink = false;
+    [SerializeField] private bool useBlink = false;
+    private bool isRightFront;
 
-    Light2D light2D;
-    bool isHeadFlip = false;
-    bool isBlinking = false;
+    private Light2D light2D;
+    private bool isHeadFlip = false;
+    private bool isBlinking = false;
 
-    LimitAngle eyeLimitAngle;
-    LimitAngle headLimitAngle;
+    private LimitAngle eyeLimitAngle;
+    private LimitAngle headLimitAngle;
 
-    Vector3 mousePos;
-    Vector3 playerPos;
+    private Vector3 mousePos;
+    private Vector3 playerPos;
 
-    GameObject hitObj = null;
-    bool alreadyHit = false;
+    private GameObject hitObj = null;
+    private bool alreadyHit = false;
 
-    float innerAngle;
-    float outerAngle;
+    private float innerAngle;
+    private float outerAngle;
 
-    void Start() 
+    private void Start() 
     {
-        eyeLimitAngle.upRightAngle = 0.0f + limitEyeSightRange;
-        eyeLimitAngle.upLeftAngle = 0.0f + limitEyeSightRange;
-        eyeLimitAngle.downRightAngle = 180.0f - limitEyeSightRange;
-        eyeLimitAngle.downLeftAngle = 180.0f - limitEyeSightRange;
-        headLimitAngle.upRightAngle = 0.0f + limitEyeSightRange;
-        headLimitAngle.upLeftAngle = 0.0f - limitEyeSightRange;
-        headLimitAngle.downRightAngle = -90.0f + limitEyeSightRange;
-        headLimitAngle.downLeftAngle = 90.0f - limitEyeSightRange;
+        eyeLimitAngle = new LimitAngle(0.0f + limitEyeSightRange, 0.0f + limitEyeSightRange, 180.0f - limitEyeSightRange, 180.0f - limitEyeSightRange);
+        headLimitAngle = new LimitAngle(0.0f + limitEyeSightRange, 0.0f - limitEyeSightRange, -90.0f + limitEyeSightRange, 90.0f - limitEyeSightRange);
 
         light2D = eyeSight.GetComponent<Light2D>();
+        playerMovement = GetComponent<PlayerMovement>();
 
         innerAngle = light2D.pointLightInnerAngle;
         outerAngle = light2D.pointLightOuterAngle;
+
+        isRightFront = playerMovement.isFacingRight;
     }
 
-    void Update()
+    private void Update()
     {
         if (useBlink && isBlinking == false)
         {
@@ -134,10 +140,7 @@ public class EyeSight : MonoBehaviour
 
         // 디버깅용
         Debug.DrawRay(isRightFront ? rightPos : leftPos, mousePos - playerPos, Color.red);
-    }
-    
-    void FixedUpdate()
-    {
+
         if(isTracking)
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -153,7 +156,7 @@ public class EyeSight : MonoBehaviour
         }
     }
 
-    void TrackingMouse()
+    private void TrackingMouse()
     {
         Vector2 structPos = new Vector2(mousePos.x - playerPos.x, mousePos.y - playerPos.y);
 
@@ -161,7 +164,7 @@ public class EyeSight : MonoBehaviour
         float mouseRotate = (rad * 180) / Mathf.PI;
         float unityEyeAngle = -mouseRotate;
         float unityHeadAngle = -mouseRotate - 90;
-        float convertToEyeAngle = ConvertToAngle(unityEyeAngle);
+        float convertToEyeAngle = ConvertToEyeAngle(unityEyeAngle);
         float convertToHeadAngle = ConvertToHeadAngle(unityHeadAngle);
 
         // 머리 회전
@@ -170,14 +173,6 @@ public class EyeSight : MonoBehaviour
         // 눈 회전
         leftEyeBone.transform.localEulerAngles = new Vector3(0, 0, convertToEyeAngle);
         rightEyeBone.transform.localEulerAngles = new Vector3(0, 0, convertToEyeAngle);
-        /*for (int idx = 0; idx < headBone.transform.childCount; ++idx)
-        {
-            Transform eyeBone = headBone.transform.GetChild(idx);
-            if (eyeBone == null || eyeBone.gameObject.activeInHierarchy == false)
-                continue;
-
-            eyeBone.localEulerAngles = new Vector3(0, 0, convertToEyeAngle);
-        }*/
 
         // 시야 회전
         if (rightEyeBone == null || rightEyeBone.activeInHierarchy == false)
@@ -186,16 +181,14 @@ public class EyeSight : MonoBehaviour
             return;
         }
 
-        //eyeSight.transform.localEulerAngles = isRightFront ? -eyeBoneR.localEulerAngles : eyeBoneR.localEulerAngles;
-        //eyeSight.transform.position = eyeBoneR.position;
         eyeSight.transform.localEulerAngles = isRightFront ? -rightEyeBone.transform.localEulerAngles - new Vector3(0f, 0f, 90f) : rightEyeBone.transform.localEulerAngles - new Vector3(0f, 0f, 90f);
         eyeSight.transform.position = rightEyeBone.transform.position;
     }
 
-    float ConvertToAngle(float unityAngle)
+    private float ConvertToEyeAngle(float unityAngle)
     {
         float eyeAngle = isRightFront ? -unityAngle : unityAngle;
-
+        eyeAngle *= playerMovement.facingDirection;
         // 우상단 제한
         if (0.0f < eyeAngle && eyeLimitAngle.upRightAngle > eyeAngle)
         {
@@ -222,9 +215,9 @@ public class EyeSight : MonoBehaviour
         }
     }
 
-    float ConvertToHeadAngle(float unityHeadAngle)
+    private float ConvertToHeadAngle(float unityHeadAngle)
     {
-        float rightFrontAngle = isRightFront ? (isHeadFlip ? -180 :180) : 0;
+        float rightFrontAngle = isRightFront ? (isHeadFlip ? -180 : 180) : 0;
         float headAngle = isHeadFlip ? unityHeadAngle - rightFrontAngle : unityHeadAngle + rightFrontAngle;
 
         // 우상단 제한
@@ -253,20 +246,20 @@ public class EyeSight : MonoBehaviour
         }
     }
 
-    void SetPlayerHeadFront()
+    private void SetPlayerHeadFront()
     {
-        if (Input.GetKey(KeyCode.A) && isHeadFlip)
+        if(!playerMovement.isFacingRight && isHeadFlip)
         {
             InverseHeadFlip();
             TurnHead();
         }
-        else if (Input.GetKey(KeyCode.D) && !isHeadFlip)
+        else if(playerMovement.isFacingRight && !isHeadFlip)
         {
             InverseHeadFlip();
             TurnHead();
         }
 
-        if (isRightFront && mousePos.x < playerPos.x)
+        if(isRightFront && mousePos.x < playerPos.x)
         {
             isRightFront = false;
             TurnHead();
@@ -278,7 +271,7 @@ public class EyeSight : MonoBehaviour
         }
     }
 
-    void TurnHead()
+    private void TurnHead()
     {
         Transform neckBone = headBone.transform.parent;
         if (neckBone.gameObject.activeInHierarchy)
@@ -297,7 +290,7 @@ public class EyeSight : MonoBehaviour
         isHeadFlip = !isHeadFlip;
     }
 
-    IEnumerator StartBlink()
+    private IEnumerator StartBlink()
     {
         isBlinking = true;
         float time = 0.0f;
