@@ -43,6 +43,10 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float jumpPower;
     private float jumpDelay = 0.25f;
     private float jumpTimer;
+    private bool isJump;
+    private bool isElasticityJump;
+    [SerializeField] private float elasticityJumpDelay;
+    private float elasticityJumpTimer;
 
     [Header("벽점프")]
     [SerializeField] private float checkWallDistance;
@@ -69,8 +73,9 @@ public class PlayerMovement : MonoBehaviour
 
         CheckMovementState();
 
-        if(Input.GetButtonDown("Jump"))
+        if (Input.GetButtonDown("Jump"))
         {
+            isJump = true;
             jumpTimer = Time.time + jumpDelay;
         }
     }
@@ -84,10 +89,18 @@ public class PlayerMovement : MonoBehaviour
 
         ModifyPhysics();
 
-        if (jumpTimer > Time.time && currentState == MovementState.OnGround)
+        // 융통성 점프
+        if(jumpTimer > Time.time && elasticityJumpTimer > Time.time && isElasticityJump)
+        {
+            Debug.Log("융통성 점프");
+            Jump();
+        }
+        // 점프
+        else if(jumpTimer > Time.time && currentState == MovementState.OnGround)
         {
             Jump();
         }
+        // 벽점프
         else if(jumpTimer > Time.time && (currentState == MovementState.WallSliding || currentState == MovementState.TouchingWall))
         {
             WallJump();
@@ -132,7 +145,7 @@ public class PlayerMovement : MonoBehaviour
 
         
 
-        Debug.Log(rigid.velocity);
+        //Debug.Log(rigid.velocity);
 
         animator.SetFloat("Move", Mathf.Abs(moveVelocityX));
     }
@@ -160,23 +173,31 @@ public class PlayerMovement : MonoBehaviour
             rigid.gravityScale = gravity * (fallMultiplier * 0.4f);
         }
 
-        Debug.Log("Change Gravity: " + rigid.gravityScale);
+        //Debug.Log("Change Gravity: " + rigid.gravityScale);
     }
 
     private void Jump()
     {
         rigid.velocity = new Vector2(rigid.velocity.x, 0);
         rigid.AddForce(Vector2.up * jumpPower, ForceMode2D.Impulse);
+
+        // 점프 후 초기화
+        isElasticityJump = false;
         jumpTimer = 0f;
+        elasticityJumpTimer = 0f;
     }
 
     private void WallJump()
     {
-        Debug.Log("벽점");
         Vector2 force = new Vector2(wallJumpPower * wallJumpDirection.x * -facingDirection, wallJumpPower * wallJumpDirection.y);
         rigid.velocity = Vector2.zero;
         rigid.AddForce(force, ForceMode2D.Impulse);
         StartCoroutine("StopMove");
+
+        // 점프 후 초기화
+        isElasticityJump = false;
+        jumpTimer = 0f;
+        elasticityJumpTimer = 0f;
     }
 
     IEnumerator StopMove()
@@ -219,15 +240,22 @@ public class PlayerMovement : MonoBehaviour
         {
             currentState = MovementState.TouchingWall;
         }
-        else if(rigid.velocity.y < 0)
+        else if(isJump)
         {
-            currentState = MovementState.Falling;
-            animator.SetBool("Falling", true);
+            isJump = false;
+            currentState = MovementState.Jumping;
+            animator.SetBool("Jump", true);
         }
         else
         {
-            currentState = MovementState.Jumping;
-            animator.SetBool("Jump", true);
+            if(currentState == MovementState.OnGround)
+            {
+                isElasticityJump = true;
+                elasticityJumpTimer = Time.time + elasticityJumpDelay;
+            }
+
+            currentState = MovementState.Falling;
+            animator.SetBool("Falling", true);
         }
     }
 
