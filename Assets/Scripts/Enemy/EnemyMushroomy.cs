@@ -5,17 +5,18 @@ using UnityEngine;
 
 public class EnemyMushroomy : Enemy
 {
-    [SerializeField] private Vector3 nextFrontVec;
-
+    [SerializeField] private float frontCheckDistance;
     [SerializeField] private float minNextMoveStateTime = 2.0f;
     [SerializeField] private float maxNextMoveStateTime = 5.0f;
+
+    private Vector3 nextFrontVec;
     private float nextMoveStateTime;
 
     private void Awake()
     {
         rigid = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
-        capsuleCollider = GetComponent<CapsuleCollider2D>();
+        boxCollider = GetComponent<BoxCollider2D>();
     }
 
     private void Start()
@@ -25,6 +26,7 @@ public class EnemyMushroomy : Enemy
         //StartCoroutine("StartEnemyAI");
         GetComponent<Animator>().SetBool("Move", true);
         nextMove = -1;
+        NextFrontVec();
     }
 
     private void FixedUpdate()
@@ -51,11 +53,11 @@ public class EnemyMushroomy : Enemy
     {
         if(nextMove == 1)
         {
-            nextFrontVec = Vector3.right;
+            nextFrontVec = Vector3.right * frontCheckDistance;
         }
         else if(nextMove == -1)
         {
-            nextFrontVec = Vector3.left;
+            nextFrontVec = Vector3.left * frontCheckDistance;
         }
     }
 

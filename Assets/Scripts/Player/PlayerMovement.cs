@@ -24,6 +24,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Transform wallCheck;
     [SerializeField] private Transform feetPos;
     [SerializeField] private LayerMask groundLayer;
+    protected Rigidbody2D rigid;
 
     [Header("움직임")]
     public MovementState currentState = MovementState.OnGround;
@@ -58,7 +59,9 @@ public class PlayerMovement : MonoBehaviour
     public float gravity = 1f;
     public float fallMultiplier = 5f;
 
-    protected Rigidbody2D rigid;
+    [Header("상호작용")]
+    [SerializeField] private float knockBackRange;
+    [SerializeField] private float restTime;
 
     // Start is called before the first frame update
     private void Start()
@@ -259,6 +262,21 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    private void Flip()
+    {
+        // 슬라이딩 중에 반대 방향으로 이동할 경우 위치 변경
+        if (currentState == MovementState.WallSliding)
+        {
+            currentState = MovementState.Falling;
+            animator.SetBool("Sliding", false);
+            animator.SetBool("Falling", true);
+        }
+
+        facingDirection *= -1;
+        isFacingRight = !isFacingRight;
+        transform.localScale = new Vector3(facingDirection, transform.localScale.y, transform.localScale.z);
+    }
+
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
@@ -272,18 +290,53 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private void Flip()
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        // 슬라이딩 중에 반대 방향으로 이동할 경우 위치 변경
-        if(currentState == MovementState.WallSliding)
+        if (collision.gameObject.tag == "Item")
         {
-            currentState = MovementState.Falling;
-            animator.SetBool("Sliding", false);
-            animator.SetBool("Falling", true);
+            Destroy(collision.gameObject);
         }
+        else if (collision.gameObject.tag == "Finish")
+        {
+            GameManager.GetInstance().NextStage();
+        }
+    }
 
-        facingDirection *= -1;
-        isFacingRight = !isFacingRight;
-        transform.localScale = new Vector3(facingDirection, transform.localScale.y, transform.localScale.z);
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.tag == "Enemy")
+        {
+            if (rigid.velocity.y < 0 && transform.position.y > collision.transform.position.y)
+            {
+                Enemy enemyObject = collision.transform.GetComponent<Enemy>();
+                enemyObject.OnDamaged();
+            }
+            else
+            {
+                OnDamaged(collision.transform);
+            }
+        }
+    }
+
+    private void OnDamaged(Transform enemy)
+    {
+        Enemy enemyObject = enemy.GetComponent<Enemy>();
+        int damage = enemyObject.GetDamage();
+        GameManager.GetInstance().DecreaseHP(damage);
+
+        // 10번째 레이어는 PlayerDamaged
+        gameObject.layer = 10;
+
+        int knockBackDir = transform.position.x - enemy.transform.position.x > 0 ? 1 : -1;
+        rigid.AddForce(new Vector2(knockBackDir, 1) * knockBackRange, ForceMode2D.Impulse);
+
+        // TODO: 공격받은 애니메이션 추가
+        Invoke("OnRest", restTime);
+    }
+    
+    private void OnRest()
+    {
+        // 9번째 레이어는 Player
+        gameObject.layer = 9;
     }
 }

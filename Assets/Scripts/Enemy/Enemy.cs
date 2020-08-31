@@ -17,7 +17,7 @@ public class Enemy : MonoBehaviour
     [SerializeField] protected GameObject player;
     protected Rigidbody2D rigid;
     protected SpriteRenderer spriteRenderer;
-    protected CapsuleCollider2D capsuleCollider;
+    protected BoxCollider2D boxCollider;
 
     protected EEnemyType enemyType = EEnemyType.None;
 
@@ -79,7 +79,7 @@ public class Enemy : MonoBehaviour
     {
         //spriteRenderer.color = new Color(1.0f, 1.0f, 1.0f, 0.5f);
         //spriteRenderer.flipY = true;
-        capsuleCollider.enabled = false;
+        boxCollider.enabled = false;
         rigid.AddForce(Vector2.up, ForceMode2D.Impulse);
         Invoke("Dead", 3.0f);
     }
