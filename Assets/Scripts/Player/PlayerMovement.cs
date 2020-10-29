@@ -42,6 +42,18 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("점프")]
     [SerializeField] private float jumpPower;
+    public float JumpPower
+    {
+        get
+        {
+            return jumpPower;
+        }
+        
+        set
+        {
+            jumpPower = value;
+        }
+    }
     private float jumpDelay = 0.25f;
     private float jumpTimer;
     private bool isJump;
@@ -203,7 +215,7 @@ public class PlayerMovement : MonoBehaviour
         elasticityJumpTimer = 0f;
     }
 
-    IEnumerator StopMove()
+    private IEnumerator StopMove()
     {
         canMove = false;
 
@@ -322,7 +334,7 @@ public class PlayerMovement : MonoBehaviour
     {
         Enemy enemyObject = enemy.GetComponent<Enemy>();
         int damage = enemyObject.GetDamage();
-        GameManager.GetInstance().DecreaseHP(damage);
+        //GameManager.GetInstance().DecreaseHP(damage);
 
         // 10번째 레이어는 PlayerDamaged
         gameObject.layer = 10;
@@ -330,13 +342,31 @@ public class PlayerMovement : MonoBehaviour
         int knockBackDir = transform.position.x - enemy.transform.position.x > 0 ? 1 : -1;
         rigid.AddForce(new Vector2(knockBackDir, 1) * knockBackRange, ForceMode2D.Impulse);
 
+        StartCoroutine("InvincibleBlink");
+
         // TODO: 공격받은 애니메이션 추가
         Invoke("OnRest", restTime);
     }
-    
+
+    private IEnumerator InvincibleBlink()
+    {
+        bool isActive = true;
+        float time = 0.0f;
+        while (time < restTime)
+        {
+            time += 0.1f;
+            
+            isActive = !isActive;
+            Debug.Log(isActive);
+            transform.GetChild(0).gameObject.SetActive(isActive);
+            yield return new WaitForSeconds(0.1f);
+        }
+    }
+
     private void OnRest()
     {
         // 9번째 레이어는 Player
         gameObject.layer = 9;
+        transform.GetChild(0).gameObject.SetActive(true);
     }
 }

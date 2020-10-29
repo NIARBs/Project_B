@@ -31,6 +31,9 @@ public class EnemyMushroomy : Enemy
 
     private void FixedUpdate()
     {
+        if(!isAlive)
+            return;
+
         //움직임
         rigid.velocity = new Vector2(nextMove * moveSpeed, rigid.velocity.y);
 

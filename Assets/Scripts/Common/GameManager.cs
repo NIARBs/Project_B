@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    private const int MAX_HP = 3;
     private static GameManager Instance = null;
 
     [SerializeField] int curHp = 3;
@@ -37,36 +36,6 @@ public class GameManager : MonoBehaviour
             Debug.Log("[WARNING] Game Manager is null.");
         }
         return Instance;
-    }
-
-    public void IncreaseHP(int hp)
-    {
-        int nextHp = curHp + hp;
-        if(nextHp >= curHp)
-        {
-            curHp = MAX_HP;
-        }
-        else
-        {
-            curHp = nextHp;
-        }
-
-        HUDManager.GetInstance().RefreshHUD();
-    }
-
-    public void DecreaseHP(int hp)
-    {
-        int nextHp = curHp - hp;
-        if(nextHp <= 0)
-        {
-            curHp = 0;
-        }
-        else
-        {
-            curHp = nextHp;
-        }
-
-        HUDManager.GetInstance().RefreshHUD();
     }
 
     public void setPanic(float panic)
